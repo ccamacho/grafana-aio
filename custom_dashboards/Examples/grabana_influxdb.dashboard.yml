@@ -1,0 +1,30 @@
+#
+# This is an example using Grabana
+#
+---
+title: Grabana example
+
+editable: true
+shared_crosshair: true
+tags: [generated, yaml]
+auto_refresh: 10s
+
+rows:
+  - name: Test row
+    panels:
+      - graph:
+          title: Dummy
+          datasource: influxdb-local
+          targets:
+            - influxdb:
+                ref: A
+                query: buckets()
+
+  - name: "Some text, because it might be useful"
+    panels:
+      - text:
+          title: Some awesome text?
+          markdown: "Markdown syntax [commonmark.org/help](https://commonmark.org/help/)\n${percentile}"
+      - text:
+          title: Some awesome html?
+          html: "Some <b>awesome</b> html?"

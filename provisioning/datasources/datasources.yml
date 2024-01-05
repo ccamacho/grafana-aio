@@ -1,0 +1,41 @@
+#
+# MAke sure these credential details match
+# scripts/influxdb_connect.py
+#
+---
+apiVersion: 1
+datasources:
+
+  - name: "influxdb-local"
+    type: "influxdb"
+    access: "proxy"
+    # access: "server"
+    user: "psap"
+    url: "http://localhost:8086"
+    database: "psap"
+    isDefault: true
+    editable: true
+    jsonData:
+      version: InfluxQL
+      organization: "psap"
+      dbName: psap
+      httpMode: GET
+      defaultBucket: psap
+      tlsSkipVerify: true
+      timeInterval: "1m"
+    secureJsonData:
+      password: this_is_a_very_long_password
+
+  - name: opensearch-local
+    type: grafana-opensearch-datasource
+    access: proxy
+    url: http://localhost:9200
+    editable: true
+    jsonData:
+      database: '*'
+      interval: Daily
+      timeField: '@timestamp'
+      version: '2.11.1'
+      flavor: 'opensearch'
+      logMessageField: message
+      logLevelField: fields.level

@@ -1,0 +1,11 @@
+# The current pip version is quite old
+# we will install from sources until
+# there is a new release
+# Steps in the workarounds.sh script.
+# grafanalib
+# For connecting to Horreum
+requests
+# Use only the official v2 client
+# https://github.com/influxdata/influxdb-client-python
+influxdb-client[ciso]
+opensearch-py
