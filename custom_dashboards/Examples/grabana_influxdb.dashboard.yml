@@ -2,7 +2,7 @@
 # This is an example using Grabana
 #
 ---
-title: Grabana example
+title: Grabana example (does not support InfluxDB or OpenSearch)
 
 editable: true
 shared_crosshair: true

@@ -1,4 +1,4 @@
-# HOw to use this folder
+# How to use this folder
 
 Create your dashboards organized in folders.
 Grafana does not support nesting folders so the

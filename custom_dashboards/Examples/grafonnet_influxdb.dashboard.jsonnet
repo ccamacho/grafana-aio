@@ -284,7 +284,7 @@ local myPanels = {
 local w = g.panel.timeSeries.gridPos.withW;
 local h = g.panel.timeSeries.gridPos.withH;
 
-g.dashboard.new('Purdue Analysis Facility Dashboard')
+g.dashboard.new('Grafonnet and InfluxDB example')
 + g.dashboard.withUid('purdue-af-dashboard')
 + g.dashboard.withDescription('Purdue Analysis Facility monitoring')
 + g.dashboard.withRefresh('1m')

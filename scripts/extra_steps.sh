@@ -27,7 +27,9 @@ set -ex
 # Install grafanalib from sources because pypi is +1y old
 git clone https://github.com/weaveworks/grafanalib grafanalib_sources
 cd grafanalib_sources
-pip install -e .
+# We install grafanalib as root to have it available for all users in the
+# container
+sudo python3 -m pip install -e .
 
 # Install grafonnet
 # NO need to install we pull from the git repo

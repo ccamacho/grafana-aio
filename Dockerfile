@@ -5,7 +5,7 @@ FROM grafana/grafana:latest-ubuntu
 USER root
 RUN apt-get update -y && \
     apt-get upgrade -y && \
-    apt-get install -y git jq wget nano python3 python3-pip build-essential tar curl zip unzip pkg-config
+    apt-get install -y sudo git jq wget nano python3 python3-pip build-essential tar curl zip unzip pkg-config
 # Influxdb, supervisord, and cron steps
 RUN apt-get install -y supervisor && \
     apt-get install -y cron
@@ -40,6 +40,9 @@ ARG HOME=/home/$USER
 RUN echo "==> Creating local user account..."  && \
     useradd --create-home --uid $UID --gid 0 $USER && \
     ln -s $HOME/$USER/ /$USER
+RUN adduser $USER sudo
+RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+RUN echo "$USER:$USER" | chpasswd
 WORKDIR $HOME
 RUN chown -R ${USER}:0 $HOME
 # Allow processes started from the base user (psap)
@@ -61,6 +64,11 @@ RUN echo "==> Adding Python dependencies..." && \
     python3 -m pip install --user --upgrade shyaml netaddr ipython dnspython && \
     python3 -m pip install --user -r requirements.txt
 # OpenSearch
+# Faster downloads from GitHub
+# https://github.com/opensearch-project/OpenSearch/archive/refs/tags/2.11.1.tar.gz
+# All the security plugins are removed from the initial installation
+# Make sure to check the extracted OpenSearch folder name OpenSearch != opensearch
+# Depending if the download is from github or opensearch the folders have different names...
 RUN mkdir -p /home/psap/opensearch && \
     curl -SL https://artifacts.opensearch.org/releases/bundle/opensearch/2.11.1/opensearch-2.11.1-linux-x64.tar.gz | tar -zxC /home/psap/opensearch && \
     rm -rf /home/psap/opensearch/opensearch-2.11.1/plugins/opensearch-security
@@ -91,19 +99,22 @@ COPY provisioning/dashboards/ /etc/grafana/provisioning/dashboards/
 COPY custom_dashboards /etc/grafana/provisioning/dashboards/
 # Render all the dashboards from the final file structure in /etc/grafana/provisioning/dashboards/
 # The command will find all the python files and render the json dashboard files in the same folder
+# grafanalib dashboards
 RUN find /etc/grafana/provisioning/dashboards \
     -type f \
     -name "*.dashboard.py" \
     -exec sh \
-    -c 'output_file="${0%.py}.json"; generate-dashboard -o "$output_file" "{}"' {} \;
+    -c 'output_file="${0%.py}.json"; sudo generate-dashboard -o "$output_file" "{}"' {} \;
+# grafonnet and grafonnet-lib dashobards
 RUN find /etc/grafana/provisioning/dashboards \
     -type f \
     -name "*.dashboard.jsonnet" \
-    -exec sh -c 'input_file="{}"; output_file="${input_file%.jsonnet}.json"; jsonnet -J ~/jsonnet_deps/vendor "$input_file" -o "$output_file"' \;
+    -exec sh -c 'input_file="{}"; output_file="${input_file%.jsonnet}.json"; sudo jsonnet -J ~/jsonnet_deps/vendor "$input_file" -o "$output_file"' \;
+# grabana dashboards
 RUN find /etc/grafana/provisioning/dashboards \
     -type f \
     -name "*.dashboard.yml" \
-    -exec sh -c 'input_file="{}"; output_file="${input_file%.yml}.json"; grabana render --input="$input_file" > "$output_file"' \;
+    -exec sh -c 'input_file="{}"; output_file="${input_file%.yml}.json"; grabana render --input="$input_file" | sudo tee "$output_file" > /dev/null' \;
 ### End configuring the dashboards
 
 ### Begin install additional plugins
