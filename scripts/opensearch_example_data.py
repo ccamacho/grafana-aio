@@ -61,6 +61,7 @@ def generate_cpu_idle_data():
         cpu_idle_percentage = round(random.uniform(0, 100), 2)
         document = {
             'cpu_idle_percentage': cpu_idle_percentage,
+
             '@timestamp': timestamp.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
         }
         data.append(document)
@@ -112,6 +113,13 @@ def write_data_in_opensearch(client):
         'settings': {
             'index': {
                 'number_of_shards': 4
+            }
+        },
+        "mappings" : {
+            "properties": {
+                "cpu_idle_percentage": {
+                    "type": "float"
+                }
             }
         }
     }

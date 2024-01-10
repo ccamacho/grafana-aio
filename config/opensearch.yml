@@ -121,3 +121,9 @@ cluster.name: mytestcluster
 # index searcher threadpool.
 #
 #opensearch.experimental.feature.concurrent_segment_search.enabled: false
+
+prometheus.metric_name.prefix: "opensearch_"
+prometheus.nodes.filter: "_all"
+# Make sure we only expose the correct indices
+prometheus.indices_filter.selected_indices: "*"
+# prometheus.indices_filter.selected_indices: "log-*,*log,*log*,log*-test"

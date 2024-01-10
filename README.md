@@ -299,3 +299,37 @@ sequenceDiagram
 - Prometheus as an additional datasource: It looks like Prometheus is supported everywhere, but to support this new data store we will also need to integrate and additional backend to be able to push data in the datastore using a python library. Prometheus includes a local on-disk time series database, but also optionally integrates with remote storage systems. Prometheus's local time series database stores data in a custom, highly efficient format on local storage. To do this something like [Mimir](https://github.com/grafana/mimir) will also need to be included.
 
 - Grafana organization: No tree-like nested [folders in grafana for dashboards](https://github.com/grafana/grafana/issues/10339).
+
+
+# Part II
+
+Exporting OpenSearch indexes for Prometheus
+
+curl http://localhost:9200/_prometheus/metrics
+
+
+
+OpenSearch port 9200
+GRafana port 3000
+Prometheus 9090
+InfluxDB 8086
+
+Indexes exposed from OpenSearch to Prometheus
+curl http://localhost:9200/_prometheus/metrics
+
+
+
+docker run \
+    -p 3000:3000 \
+    -p 9090:9090 \
+    -p 9200:9200 \
+    -p 8086:8086 \
+    --add-host horreum.corp.redhat.com:10.1.184.215 \
+    grafana-aio
+
+### Interesting URLs
+
+  - Grafana UI: http://localhost:3000/
+  - InfluxDB UI:
+  - Prometheus UI: http://localhost:9090/
+  - OpenSearch UI: http://localhost:9200/_prometheus/metrics

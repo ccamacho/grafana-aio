@@ -37,7 +37,7 @@ RUN echo 'root:root' | chpasswd
 ARG USER=psap
 ARG UID=1001
 ARG HOME=/home/$USER
-RUN echo "==> Creating local user account..."  && \
+RUN echo "==> Creating local user account..." && \
     useradd --create-home --uid $UID --gid 0 $USER && \
     ln -s $HOME/$USER/ /$USER
 RUN adduser $USER sudo
@@ -53,7 +53,32 @@ RUN chown -R ${USER}:0 /var/run
 RUN chown -R ${USER}:0 /run
 RUN chmod gu+rw /var/run
 RUN chmod gu+s /usr/sbin/cron
-# We go back to a non privileged execution
+
+# Prometheus install
+RUN mkdir /etc/prometheus && \
+    mkdir /var/lib/prometheus && \
+    curl -SL https://github.com/prometheus/prometheus/releases/download/v2.48.1/prometheus-2.48.1.linux-amd64.tar.gz  | tar -zxC /home/psap && \
+    cd prometheus-2.48.1.linux-amd64 && \
+    mv prometheus /usr/local/bin && \
+    mv promtool /usr/local/bin && \
+    chown -R ${USER}:0 /usr/local/bin/prometheus && \
+    chown -R ${USER}:0 /usr/local/bin/promtool && \
+    mv consoles /etc/prometheus && \
+    mv console_libraries /etc/prometheus && \
+    mv prometheus.yml /etc/prometheus && \
+    chown -R ${USER}:0 /etc/prometheus && \
+    chown -R ${USER}:0 /etc/prometheus/consoles && \
+    chown -R ${USER}:0 /etc/prometheus/console_libraries && \
+    chown -R ${USER}:0 /var/lib/prometheus
+
+
+
+#
+#
+# We go back to a non
+# privileged execution
+#
+#
 USER $USER
 RUN mkdir -p /home/$USER/supervisord
 ENV PATH $HOME/.local/bin:$PATH
@@ -71,7 +96,8 @@ RUN echo "==> Adding Python dependencies..." && \
 # Depending if the download is from github or opensearch the folders have different names...
 RUN mkdir -p /home/psap/opensearch && \
     curl -SL https://artifacts.opensearch.org/releases/bundle/opensearch/2.11.1/opensearch-2.11.1-linux-x64.tar.gz | tar -zxC /home/psap/opensearch && \
-    rm -rf /home/psap/opensearch/opensearch-2.11.1/plugins/opensearch-security
+    rm -rf /home/psap/opensearch/opensearch-2.11.1/plugins/opensearch-security && \
+    /home/psap/opensearch/opensearch-2.11.1/bin/opensearch-plugin install https://github.com/Aiven-Open/prometheus-exporter-plugin-for-opensearch/releases/download/2.11.1.0/prometheus-exporter-2.11.1.0.zip
 
 COPY config/opensearch.yml /home/psap/opensearch/opensearch-2.11.1/config/opensearch.yml
 # Run the workarounds script
@@ -84,12 +110,15 @@ RUN cd jsonnet_deps  && \
 #    git clone https://github.com/grafana/jsonnet-libs.git
 ### End running all the preparation tasks
 
+
 ### Begin copying the custom provisioning configuration files into the container
 COPY config/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY config/grafana.ini /etc/grafana/grafana.ini
+COPY config/prometheus.yml /etc/prometheus/prometheus.yml
 COPY provisioning/datasources/datasources.yml /etc/grafana/provisioning/datasources/datasources.yml
 COPY provisioning/plugins/plugins.yml /etc/grafana/provisioning/plugins/plugins.yml
 ### End copying the custom provisioning configuration files into the container
+
 
 ### Begin configuring the dashboards
 # We copy first the file structure used to hierarchical store the dashboards in the corresponding folders
