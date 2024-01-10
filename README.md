@@ -240,7 +240,7 @@ sequenceDiagram
   </tr>
   <tr>
     <td>Support for an OpenSearch target*</td>
-    <td>Not fully tested</td>
+    <td>Yes</td>
     <td>Not fully tested</td>
     <td>Not fully tested</td>
     <td>Not fully tested</td>
@@ -301,7 +301,8 @@ sequenceDiagram
 - Grafana organization: No tree-like nested [folders in grafana for dashboards](https://github.com/grafana/grafana/issues/10339).
 
 
-# Part II
+
+# Part II (TODO)
 
 Exporting OpenSearch indexes for Prometheus
 
@@ -315,8 +316,12 @@ Prometheus 9090
 InfluxDB 8086
 
 Indexes exposed from OpenSearch to Prometheus
-curl http://localhost:9200/_prometheus/metrics
+curl http://localhost:9200/_prometheus/metrics?pretty=true
 
+
+List all OpenSearch indices
+curl http://localhost:9200/_aliases?pretty=true
+curl http://localhost:9200/_cluster/health?pretty
 
 
 docker run \

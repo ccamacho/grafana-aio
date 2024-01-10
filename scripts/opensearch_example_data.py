@@ -115,7 +115,7 @@ def write_data_in_opensearch(client):
                 'number_of_shards': 4
             }
         },
-        "mappings" : {
+        "mappings": {
             "properties": {
                 "cpu_idle_percentage": {
                     "type": "float"
