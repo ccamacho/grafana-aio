@@ -6,3 +6,8 @@ apps:
     disabled: false
     jsonData:
       orgId: 1
+  - type: nline-plotlyjs-panel
+    name: nline-plotlyjs-panel
+    disabled: false
+    jsonData:
+      orgId: 1

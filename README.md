@@ -37,6 +37,8 @@
 
     - [Grafanalib](https://github.com/weaveworks/grafanalib): Grafanalib is a Python library for programmatically creating and managing Grafana dashboards. It simplifies the process of defining and configuring Grafana dashboards by allowing users to generate JSON specifications using Python code. This enables automation, version control, and easy replication of dashboards across environments. Grafanalib helps streamline the workflow for individuals and teams working with Grafana, providing a more structured and code-driven approach to dashboard creation and maintenance.
 
+    -[]() https://github.com/fzyzcjy/grafana_dashboard_python
+    
 - The services orchestration
 
     - [Supervisor](https://github.com/Supervisor/supervisor): Supervisor is a Python-based process control system that simplifies the management of background processes. It ensures the automatic restart of failed processes, monitors their status, and provides a web-based user interface for control. Configuration is done through simple INI files, where users define processes to be managed, specify their startup parameters, and configure monitoring options. Supervisord's versatility makes it a popular choice for maintaining the stability and availability of applications by efficiently handling process lifecycle events. Overall, it serves as a reliable tool for process supervision and management in server environments.
@@ -93,7 +95,7 @@ Exposed ports:
   - InfluxDB: 8086
 
 Indexes exposed from OpenSearch to Prometheus:
-  - `curl http://localhost:9200/_prometheus/metrics?pretty=true`
+  - `curl http://localhost:9200/_prometheus/metrics`
 
 List all OpenSearch indices:
   - `curl http://localhost:9200/_aliases?pretty=true`
@@ -104,9 +106,9 @@ Get the OpenSearch cluster name:
 ### Interesting URLs
 
   - Grafana UI: http://localhost:3000/
-  - InfluxDB UI: NoInterestingURL
+  - InfluxDB UI: No web UI
   - Prometheus UI: http://localhost:9090/
-  - OpenSearch UI: http://localhost:9200/_prometheus/metrics
+  - OpenSearch UI: No web UI (maybe install dashboards?)
 
 ## Components
 
@@ -142,6 +144,44 @@ mindmap
 ```
 
 Ideally all the previous components should run independently in separate containers and orchestrated by a container orchestration system like OpenShift but the goal is to quickly start a container with the requirements to display the dashboards directly.
+
+### Grafana customization
+
+Plotly plugins
+
+[https://github.com/NatelEnergy/grafana-plotly-panel](https://github.com/NatelEnergy/grafana-plotly-panel): Deprecated do not use
+Latest commit over 3 years old
+Version
+0.0.7
+From
+Natel Energy
+Downloads
+54,952,102
+Dependencies
+Grafana 4.x.x
+
+[https://github.com/ae3e/ae3e-plotly-panel](https://github.com/ae3e/ae3e-plotly-panel): DOwnloads +7.700.000
+Latest commit over 3 years old
+Version
+0.5.0
+From
+ae3e
+Downloads
+7,730,344
+Dependencies
+Grafana >=7.5.5
+[]()
+
+[https://github.com/nline/nline-plotlyjs-panel](https://github.com/nline/nline-plotlyjs-panel): DOwnloads so far +160.000
+Latest commit ~5days old
+Version
+1.6.5
+From
+nLine
+Downloads
+164,881
+Dependencies
+Grafana >=9.0.0
 
 ## Workflow
 

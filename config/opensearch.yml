@@ -127,3 +127,4 @@ prometheus.nodes.filter: "_all"
 # Make sure we only expose the correct indices
 prometheus.indices_filter.selected_indices: "*"
 # prometheus.indices_filter.selected_indices: "log-*,*log,*log*,log*-test"
+prometheus.indices_filter.selected_option: "LENIENT_EXPAND_OPEN"

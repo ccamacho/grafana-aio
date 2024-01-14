@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-Copyright contributors.
+Copyright @contributors.
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may
 not use this file except in compliance with the License. You may obtain
@@ -17,35 +17,9 @@ under the License.
 """
 
 import random
-import time
 from datetime import datetime, timedelta
 
 from opensearchpy import OpenSearch
-
-
-def wait_for_opensearch(client, timeout=60, check_interval=5):
-    """
-    Wait for the OpenSearch cluster to be in a "green" state.
-
-    :param client: OpenSearch client instance
-    :param timeout: Maximum time (in seconds) to wait for the cluster to be in a "green" state
-    :param check_interval: Interval (in seconds) between status checks
-    """
-    start_time = time.time()
-    while time.time() - start_time < timeout:
-        try:
-            # Check the cluster health
-            response = client.cluster.health(index="_all", wait_for_status="green", request_timeout=check_interval)
-            if response['status'] == 'green':
-                print("Cluster is in a 'green' state.")
-                return
-        except Exception as e:
-            # Handle exceptions if needed
-            print(f"Error checking cluster status: {e}")
-        # Sleep before the next status check
-        time.sleep(check_interval)
-    # Raise an exception if the timeout is reached
-    raise TimeoutError(f"Timed out waiting for the cluster to be in a 'green' state after {timeout} seconds.")
 
 
 def generate_cpu_idle_data():
@@ -211,8 +185,6 @@ def main():
         ssl_assert_hostname=False,
         ssl_show_warn=False,
     )
-    wait_for_opensearch(client, timeout=60)
-    # time.sleep(10)
     opensearch_write_candlestick(client)
     opensearch_write_cpu(client)
     opensearch_write_python_test(client)

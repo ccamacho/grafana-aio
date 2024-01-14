@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-Copyright contributors.
+Copyright @contributors.
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may
 not use this file except in compliance with the License. You may obtain
@@ -87,8 +87,9 @@ def write_horreum_python_performance_data(client):
             dataset_data = dataset_response.json()
             if "data" in dataset_data and dataset_data["data"]:
                 if (dataset_data["data"][0]["$schema"] == "urn:rhods-notebook-perf:1.0.0"):
+                    print('A notebook perf dataset found')
                     metric = "jupyter_notebooks_performance"
-                    start_epoch = dataset_data["start"]
+                    start_epoch = dataset_data["data"][0]["metadata"]["start"]
                     measures = dataset_data["data"][0]["results"]["benchmark_measures"]["measures"]
                     image = dataset_data["data"][0]["metadata"]["settings"]["image"]
 
@@ -103,8 +104,9 @@ def write_horreum_python_performance_data(client):
                         print(point)
                         print('Write performance point')
                         write_api.write(bucket=INFLUXDB_BUCKET, org=INFLUXDB_ORG, record=[point])
-            if "data" in dataset_data and dataset_data["data"]:
+
                 if (dataset_data["data"][0]["$schema"] == "urn:rhods-notebooks:1.0.0"):
+                    print('A notebook scale dataset found')
                     metric = "jupyter_notebooks_scale"
 
                     if "test_flavor" in dataset_data["data"][0]["metadata"]["settings"] and dataset_data["data"][0]["metadata"]["settings"]["test_flavor"] and \
@@ -135,7 +137,7 @@ def main():
     client = influx_client()
     write_horreum_python_performance_data(client)
     client.close()
-    print('horreum_data_import.py: Finished horreum_data_import')
+    print('horreum_influxdb_data_import.py: Finished horreum_influxdb_data_import')
 
 
 if __name__ == "__main__":

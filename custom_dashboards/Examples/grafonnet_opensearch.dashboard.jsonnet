@@ -1,19 +1,45 @@
 local g = import 'github.com/grafana/grafonnet/gen/grafonnet-latest/main.libsonnet';
 
-local opense = {
-    addQuery(
-        format=null
-    ):: 
-        g.panel.timeSeries.queryOptions.withDatasource('get_data_from_opensearch', 'opensearch-local')
+local opensearch_queries = {
+    get_accuracy():: 
+        g.panel.timeSeries.queryOptions.withDatasource('opensearch', 'opensearch-local')
         + {
-          query: '*',
-          alias: 'AliasExample',
+          query: '_index:rhoai_perfdata_accuracy',
+          alias: 'get_accuracyQuery',
           queryType: "lucene",
           metrics: [
             {
-              id: "1",
-              type: "avg",
-              field: "cpu_idle_percentage"
+              type: "raw_data",
+            }
+          ],
+          format: "table",
+          timeField: "@timestamp",
+          luceneQueryType: "Metric",
+        },
+    get_throughput():: 
+        g.panel.timeSeries.queryOptions.withDatasource('opensearch', 'opensearch-local')
+        + {
+          query: '_index:rhoai_perfdata_throughput',
+          alias: 'get_throughputQuery',
+          queryType: "lucene",
+          metrics: [
+            {
+              type: "raw_data",
+            }
+          ],
+          format: "table",
+          timeField: "@timestamp",
+          luceneQueryType: "Metric",
+        },
+    get_boxplot_latency():: 
+        g.panel.timeSeries.queryOptions.withDatasource('opensearch', 'opensearch-local')
+        + {
+          query: '_index:rhoai_perfdata_latency AND Image:[[imageVariable]]',
+          alias: 'get_boxplot_latency',
+          queryType: "lucene",
+          metrics: [
+            {
+              type: "raw_data",
             }
           ],
           format: "table",
@@ -21,6 +47,65 @@ local opense = {
           luceneQueryType: "Metric",
         },
 };
+
+local plotly_boxplot = {
+  get_asdf()::
+{
+      "datasource": {
+        "type": "opensearch",
+        "uid": "opensearch-local"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "allData": {},
+        "config": {},
+        "data": [],
+        "imgFormat": "png",
+        "layout": {
+          "font": {
+            "color": "white",
+            "family": "Inter, Helvetica, Arial, sans-serif"
+          },
+          "hoverlabel": {
+            "bgcolor": "transparent"
+          },
+          "paper_bgcolor": "transparent",
+          "plot_bgcolor": "transparent",
+          "xaxis": {
+            "automargin": true,
+            "autorange": true,
+            "type": "-"
+          },
+          "yaxis": {
+            "automargin": true,
+            "autorange": true
+          }
+        },
+        "onclick": "// console.log(data);\n// locationService.partial({ 'var-example': 'test' }, true);\n  ",
+        "resScale": 2,
+        "script": "var trace = {\n  name: data.series[0].fields[2].name,\n  line: {\n      color: \"rgba(134, 107, 64, 1)\",\n      width: 1\n    },\n  y: data.series[0].fields[2].values,\n  type: 'box',\n  fill: 'toself',\n  fillcolor: 'rgba(134, 107, 64, .2)',\n  boxpoints: 'all'\n\n};\n\nvar trace2 = {\n  name: data.series[0].fields[3].name,\n  line: {\n      color: \"rgba(250, 222, 42, 1)\",\n      width: 1\n    },\n  y: data.series[0].fields[3].values,\n  type: 'box',\n  fill: 'toself',\n  fillcolor: 'rgba(250, 222, 42, .2)',\n  boxpoints: 'all'\n};\n\nvar trace3 = {\n  name: data.series[0].fields[4].name,\n  line: {\n      color: \"rgba(115, 191, 105, 1)\",\n      width: 1\n    },\n  y: data.series[0].fields[4].values,\n  type: 'box',\n  fill: 'toself',\n  fillcolor: 'rgba(115, 191, 105, .2)',\n  boxpoints: 'all'\n};\n\nvar trace4 = {\n  name: data.series[0].fields[5].name,\n  line: {\n      color: \"rgba(87, 148, 242, 1)\",\n      width: 1\n    },\n  y: data.series[0].fields[5].values,\n  type: 'box',\n  fill: 'toself',\n  fillcolor: 'rgba(87, 148, 242, .2)',\n  boxpoints: 'all'\n};\n\nvar trace5 = {\n  name: data.series[0].fields[6].name,\n  line: {\n      color: \"rgba(142, 142, 142, 1)\",\n      width: 1\n    },\n  y: data.series[0].fields[6].values,\n  type: 'box',\n  fill: 'toself',\n  fillcolor: 'rgba(142, 142, 142, .2)',\n  boxpoints: 'all'\n};\n\nvar trace6 = {\n  name: data.series[0].fields[7].name,\n  line: {\n      color: \"rgba(242, 73, 92, 1)\",\n      width: 1\n    },\n  y: data.series[0].fields[7].values,\n  type: 'box',\n  fill: 'toself',\n  fillcolor: 'rgba(242, 73, 92, .2)',\n  boxpoints: 'all'\n};\n\n\ndata = [trace,trace2,trace3,trace4,trace5,trace6];\n\nreturn {data};",
+        "timeCol": "",
+        "yamlMode": false
+      },
+      "targets": [
+        opensearch_queries.get_boxplot_latency()
+      ],
+      "title": "Latency",
+      "type": "nline-plotlyjs-panel"
+    },  
+  
+};
+
+
+
+
+
 
 local panelo = {
     timeSeries(
@@ -33,7 +118,7 @@ local panelo = {
         max=null,
         decimals=null,
         legendMode='list',
-        legendPlacement=null,
+        legendPlacement='right',
         tooltipMode='multi',
         stackingMode=null,
         fillOpacity=6,
@@ -60,6 +145,22 @@ local panelo = {
         + g.panel.timeSeries.fieldConfig.defaults.custom.withDrawStyle(drawStyle)
         + g.panel.timeSeries.fieldConfig.defaults.custom.thresholdsStyle.withMode(thresholdMode)
         + g.panel.timeSeries.standardOptions.thresholds.withSteps(thresholdSteps),
+
+    barChart(
+        title='',
+        description='',
+        targets=[],
+        transparent=false,
+        legendMode='list',
+        legendPlacement='right',
+    ):: g.panel.barChart.new(title)
+        + g.panel.barChart.panelOptions.withDescription(description)
+        + g.panel.barChart.options.legend.withDisplayMode(legendMode)
+        + g.panel.barChart.options.legend.withPlacement(legendPlacement)
+        + g.panel.barChart.queryOptions.withTargets(targets)
+        + (if transparent then g.panel.barChart.panelOptions.withTransparent() else {})
+        + g.panel.barChart.fieldConfig.defaults.custom.scaleDistribution.withLog(10)
+        + g.panel.barChart.fieldConfig.defaults.custom.scaleDistribution.withType("log"), //valid values: "linear", "log", "ordinal", "symlog"
 
     stat(
         title='',
@@ -125,9 +226,9 @@ local panelo = {
 
 local timese ={
   usersPerNamespace:: panelo.timeSeries(
-    title='Grafonnet and OpenSearch',
+    title='Accuracy',
     targets=[
-      opense.addQuery(),
+      opensearch_queries.get_accuracy(),
     ],
     min=0,
     decimals=0,
@@ -138,15 +239,62 @@ local timese ={
   ),
 };
 
+local get_throughput_barchart ={
+  thoru:: panelo.barChart(
+    title='Throughput',
+    targets=[
+      opensearch_queries.get_throughput(),
+    ]
+  ),
+};
+
+// local asdf ={
+//   getyio:: panelo.timeSeries(
+//     title='Accuracy',
+//     targets=[
+//       opensearch_queries.get_accuracy(),
+//     ],
+//     min=0,
+//     decimals=0,
+//     legendPlacement='right',
+//     stackingMode='normal',
+//     fillOpacity=60,
+//     gradientMode=null
+//   ),
+// };
+
+
+local var = g.dashboard.variable;
+// https://docs.aws.amazon.com/grafana/latest/userguide/using-opensearch-in-AMG.html
+local customVar =
+  var.custom.new(
+    'myOptions',
+    values=['a', 'b', 'c', 'd'],
+  )
+  + var.custom.generalOptions.withDescription(
+    'This is a variable for my custom options.'
+  )
+  + var.custom.selectionOptions.withMulti();
+
+local queryVar =
+  var.query.new('imageVariable', '{"find": "terms",  "field": "Image.keyword"}')
+  + var.query.withDatasource(
+    type='opensearch',
+    uid='opensearch-local',
+  )
+  + var.query.selectionOptions.withIncludeAll()
+  + var.custom.selectionOptions.withMulti();
+
+
 local myPanels = {
-  // row: rowpanel,
+  barChart: get_throughput_barchart,
   timeSeries: timese,
 };
 
 local w = g.panel.timeSeries.gridPos.withW;
 local h = g.panel.timeSeries.gridPos.withH;
 
-g.dashboard.new('Grafonnet and OpenSearch example')
+g.dashboard.new('Grafonnet and OpenSearch example: Benchmarks results')
 + g.dashboard.withUid('grafonnet-opensearch')
 + g.dashboard.withDescription('Simple Grafonnet and OpenSearch example')
 + g.dashboard.withRefresh('1m')
@@ -155,6 +303,12 @@ g.dashboard.new('Grafonnet and OpenSearch example')
 + g.dashboard.time.withFrom(value="now-6h")
 + g.dashboard.time.withTo(value="now")
 + g.dashboard.graphTooltip.withSharedCrosshair()
++ g.dashboard.withVariables([
+  customVar,
+  queryVar,
+])
 + g.dashboard.withPanels([
-  myPanels.timeSeries.usersPerNamespace + w(10) + h(8),
+  myPanels.timeSeries.usersPerNamespace + w(24) + h(10),
+  myPanels.barChart.thoru + w(24) + h(10),
+  plotly_boxplot.get_asdf() + w(24) + h(10),
 ])

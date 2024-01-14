@@ -4,7 +4,7 @@ set -ex
 
 #############################################################################
 #                                                                           #
-# Copyright contributors.                                                   #
+# Copyright @contributors.                                                   #
 #                                                                           #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may   #
 # not use this file except in compliance with the License. You may obtain   #
@@ -76,6 +76,7 @@ init_influxdb(){
 }
 
 init_syncdata(){
+    sleep 5
     echo "initialize_data_sync.sh: Sync data from syncdata.py"
     python_output=$(python3 "${scripts_path}syncdata.py")
     echo "$python_output"

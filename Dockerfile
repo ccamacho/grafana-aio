@@ -3,16 +3,13 @@ FROM grafana/grafana:latest-ubuntu
 
 ### Begin running all the preparation tasks
 USER root
-# Install packages and dependencies
-RUN apt-get update -y && \
-    apt-get upgrade -y && \
-    apt-get install -y sudo git jq wget nano python3 python3-pip build-essential tar curl zip unzip pkg-config
-# Install supervisor, and cron
-RUN apt-get install -y supervisor && \
-    apt-get install -y cron
-# Install InfluxDB v2 available
-RUN echo 'deb [allow-insecure=yes trusted=yes] https://repos.influxdata.com/debian stable main' | tee /etc/apt/sources.list.d/influxdata.list  && \
-    apt-get update -y && apt-get install -y influxdb2
+
+### Moving deps intall here
+COPY requirements.txt .
+COPY scripts/install_dependencies.sh scripts/install_dependencies.sh
+RUN ./scripts/install_dependencies.sh
+### End of moving deps intall here
+
 # Cleanup
 RUN apt-get clean && \
     rm -rf /var/lib/apt/lists/*
@@ -50,6 +47,11 @@ RUN git clone https://github.com/google/jsonnet.git jsonnet-sources && \
 RUN curl -SL https://github.com/jsonnet-bundler/jsonnet-bundler/releases/download/v0.5.1/jb-linux-amd64 -o /usr/local/bin/jb && \
     chmod +x /usr/local/bin/jb
 RUN jb --version
+# Here we install both versions of grafonnet
+# (the old grafonnet-lib and the new grafonnet)
+COPY jsonnet_deps jsonnet_deps
+RUN cd jsonnet_deps  && \
+    jb install
 # Install Prometheus
 RUN mkdir /etc/prometheus && \
     mkdir /var/lib/prometheus && \
@@ -76,6 +78,13 @@ RUN curl -SL https://artifacts.opensearch.org/releases/bundle/opensearch/2.11.1/
     rm -rf ./opensearch-2.11.1/plugins/opensearch-security && \
     ./opensearch-2.11.1/bin/opensearch-plugin install https://github.com/Aiven-Open/prometheus-exporter-plugin-for-opensearch/releases/download/2.11.1.0/prometheus-exporter-2.11.1.0.zip
 
+### Begin install additional GRafana plugins
+# All used plugins must be installed first
+# than using them in the provision scripts
+RUN grafana cli plugins install nline-plotlyjs-panel && \
+    grafana cli plugins install grafana-opensearch-datasource
+### End installing additional plugins
+
 ### Set up folders permissions
 # Allow processes started from the base user (psap)
 # to access /var/lib and /var/run files, /var/run
@@ -92,20 +101,6 @@ USER $USER
 RUN mkdir -p $HOME/supervisord
 ENV PATH $HOME/.local/bin:$PATH
 COPY --chown=${USER}:0 . .
-RUN echo "==> Adding Python dependencies..." && \
-    python3 -m pip install --user --upgrade pip && \
-    python3 -m pip install --user --upgrade wheel && \
-    python3 -m pip install --user --upgrade shyaml netaddr ipython dnspython && \
-    python3 -m pip install --user -r requirements.txt
-# Run the workarounds script
-RUN ./scripts/extra_steps.sh
-# Here we install both versions of grafonnet
-# (the old grafonnet-lib and the new grafonnet)
-RUN cd jsonnet_deps  && \
-    jb install
-#RUN cd jsonnet_deps/vendor && \
-#    git clone https://github.com/grafana/jsonnet-libs.git
-### End running all the preparation tasks
 
 ### Begin copying the custom provisioning configuration files into the container
 COPY config/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
@@ -141,14 +136,6 @@ RUN find /etc/grafana/provisioning/dashboards \
     -name "*.dashboard.yml" \
     -exec sh -c 'input_file="{}"; output_file="${input_file%.yml}.json"; grabana render --input="$input_file" | sudo tee "$output_file" > /dev/null' \;
 ### End configuring the dashboards
-
-### Begin install additional plugins
-# All used plugins must be installed first
-# than using them in the provision scripts
-RUN grafana cli plugins install grafana-clock-panel && \
-    grafana cli plugins install grafana-piechart-panel && \
-    grafana cli plugins install grafana-opensearch-datasource
-### End installing additional plugins
 
 # Make sure cron is installed
 RUN crontab $HOME/config/cron.conf
