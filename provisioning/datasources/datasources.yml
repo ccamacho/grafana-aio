@@ -40,6 +40,25 @@ datasources:
       logMessageField: message
       logLevelField: fields.level
 
+  - name: opensearch-remote
+    type: grafana-opensearch-datasource
+    access: proxy
+    basicAuthUser: "${OPENSEARCH_REMOTE_USERNAME}"
+    url: "${OPENSEARCH_REMOTE_URL}"
+    editable: true
+    basicAuth: true
+    jsonData:
+      database: '*'
+      interval: Daily
+      timeField: '@timestamp'
+      version: '2.11.1'
+      flavor: 'opensearch'
+      logMessageField: message
+      logLevelField: fields.level
+      tlsSkipVerify: true
+    secureJsonData:
+      basicAuthPassword: "${OPENSEARCH_REMOTE_PASSWORD}"
+
   - name: prometheus-local
     type: prometheus
     access: proxy

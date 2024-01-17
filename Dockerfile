@@ -1,5 +1,9 @@
-#FROM grafana/grafana:10.2.3-ubuntu
+# Stable release
+# FROM grafana/grafana:10.2.3-ubuntu
+# Latest release
 FROM grafana/grafana:latest-ubuntu
+# Latest main
+# FROM grafana/grafana:main-ubuntu
 
 ### Begin running all the preparation tasks
 USER root
