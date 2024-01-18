@@ -81,6 +81,7 @@ RUN mkdir /etc/prometheus && \
 RUN curl -SL https://artifacts.opensearch.org/releases/bundle/opensearch/2.11.1/opensearch-2.11.1-linux-x64.tar.gz | tar -zx && \
     rm -rf ./opensearch-2.11.1/plugins/opensearch-security && \
     ./opensearch-2.11.1/bin/opensearch-plugin install https://github.com/Aiven-Open/prometheus-exporter-plugin-for-opensearch/releases/download/2.11.1.0/prometheus-exporter-2.11.1.0.zip
+RUN curl -SL https://artifacts.opensearch.org/releases/bundle/opensearch-dashboards/2.11.1/opensearch-dashboards-2.11.1-linux-x64.tar.gz | tar -zx
 
 ### Begin install additional GRafana plugins
 # All used plugins must be installed first
@@ -111,6 +112,7 @@ COPY config/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY config/grafana.ini /etc/grafana/grafana.ini
 COPY config/prometheus.yml /etc/prometheus/prometheus.yml
 COPY config/opensearch.yml $HOME/opensearch-2.11.1/config/opensearch.yml
+COPY config/opensearch_dashboards.yml $HOME/opensearch-dashboards-2.11.1/config/opensearch_dashboards.yml
 COPY provisioning/datasources/datasources.yml /etc/grafana/provisioning/datasources/datasources.yml
 COPY provisioning/plugins/plugins.yml /etc/grafana/provisioning/plugins/plugins.yml
 ### End copying the custom provisioning configuration files into the container
