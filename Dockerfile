@@ -78,10 +78,13 @@ RUN mkdir /etc/prometheus && \
 # All the security plugins are removed from the initial installation
 # Make sure to check the extracted OpenSearch folder name OpenSearch != opensearch
 # Depending if the download is from github or opensearch the folders have different names...
+ARG OPENSEARCH_VERSION="2.11.1"
 RUN curl -SL https://artifacts.opensearch.org/releases/bundle/opensearch/2.11.1/opensearch-2.11.1-linux-x64.tar.gz | tar -zx && \
-    rm -rf ./opensearch-2.11.1/plugins/opensearch-security && \
-    ./opensearch-2.11.1/bin/opensearch-plugin install https://github.com/Aiven-Open/prometheus-exporter-plugin-for-opensearch/releases/download/2.11.1.0/prometheus-exporter-2.11.1.0.zip
-RUN curl -SL https://artifacts.opensearch.org/releases/bundle/opensearch-dashboards/2.11.1/opensearch-dashboards-2.11.1-linux-x64.tar.gz | tar -zx
+    ./opensearch-2.11.1/bin/opensearch-plugin install https://github.com/Aiven-Open/prometheus-exporter-plugin-for-opensearch/releases/download/2.11.1.0/prometheus-exporter-2.11.1.0.zip && \
+    rm -rf ./opensearch-2.11.1/plugins/opensearch-security
+
+RUN curl -SL https://artifacts.opensearch.org/releases/bundle/opensearch-dashboards/2.11.1/opensearch-dashboards-2.11.1-linux-x64.tar.gz | tar -zx && \
+    ./opensearch-dashboards-2.11.1/bin/opensearch-dashboards-plugin remove securityDashboards --allow-root
 
 ### Begin install additional GRafana plugins
 # All used plugins must be installed first
