@@ -295,7 +295,7 @@ local w = g.panel.timeSeries.gridPos.withW;
 local h = g.panel.timeSeries.gridPos.withH;
 
 g.dashboard.new('Grafonnet and OpenSearch example: Benchmarks results')
-+ g.dashboard.withUid('grafonnet-opensearch')
++ g.dashboard.withUid('grafonnet-opensearch--')
 + g.dashboard.withDescription('Simple Grafonnet and OpenSearch example')
 + g.dashboard.withRefresh('1m')
 + g.dashboard.withStyle(value="dark")
