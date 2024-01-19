@@ -400,7 +400,8 @@ local h = g.panel.timeSeries.gridPos.withH;
 g.dashboard.new('Python notebooks performance dashboard')
 + g.dashboard.withDescription('Performance tests for the Python notebooks')
 + g.dashboard.withRefresh('1m')
-+ g.dashboard.withStyle(value="dark")
+// This just stopped to work...
+// + g.dashboard.withStyle(value="dark")
 + g.dashboard.withTimezone(value="browser")
 + g.dashboard.time.withFrom(value="now-6h")
 + g.dashboard.time.withTo(value="now")
