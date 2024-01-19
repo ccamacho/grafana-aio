@@ -38,7 +38,7 @@
     - [Grafanalib](https://github.com/weaveworks/grafanalib): Grafanalib is a Python library for programmatically creating and managing Grafana dashboards. It simplifies the process of defining and configuring Grafana dashboards by allowing users to generate JSON specifications using Python code. This enables automation, version control, and easy replication of dashboards across environments. Grafanalib helps streamline the workflow for individuals and teams working with Grafana, providing a more structured and code-driven approach to dashboard creation and maintenance.
 
     -[]() https://github.com/fzyzcjy/grafana_dashboard_python
-    
+
 - The services orchestration
 
     - [Supervisor](https://github.com/Supervisor/supervisor): Supervisor is a Python-based process control system that simplifies the management of background processes. It ensures the automatic restart of failed processes, monitors their status, and provides a web-based user interface for control. Configuration is done through simple INI files, where users define processes to be managed, specify their startup parameters, and configure monitoring options. Supervisord's versatility makes it a popular choice for maintaining the stability and availability of applications by efficiently handling process lifecycle events. Overall, it serves as a reliable tool for process supervision and management in server environments.
@@ -67,6 +67,7 @@ docker run \
     -p 3000:3000 \
     -p 9090:9090 \
     -p 9200:9200 \
+    -p 5601:5601 \
     -p 8086:8086 \
     grafana-aio
 ```
@@ -78,6 +79,7 @@ docker run \
     -p 3000:3000 \
     -p 9090:9090 \
     -p 9200:9200 \
+    -p 5601:5601 \
     -p 8086:8086 \
     --pull always \
     --add-host this.is.a.host.example.com:1.2.3.4 \
@@ -90,6 +92,7 @@ Depending on your host configuration, include any host address not resolved by y
 
 Exposed ports:
   - OpenSearch: 9200
+  - OpenSearch dashboards: 5601
   - Grafana: 3000
   - Prometheus: 9090
   - InfluxDB: 8086
@@ -108,7 +111,8 @@ Get the OpenSearch cluster name:
   - Grafana UI: http://localhost:3000/
   - InfluxDB UI: No web UI
   - Prometheus UI: http://localhost:9090/
-  - OpenSearch UI: No web UI (maybe install dashboards?)
+  - OpenSearch UI: No web UI
+  - OpenSearch dashboards: http://localhost:5601/
 
 ## Components
 
@@ -121,7 +125,7 @@ mindmap
         {{supervisord}}
             ))Time series databases((
                 (InfluxDB)
-                (OpenSearch)
+                (OpenSearch & OpenSearch dashboards)
                 (Prometheus)
             ))Data syncronization((
                 (Init InfluxDB)

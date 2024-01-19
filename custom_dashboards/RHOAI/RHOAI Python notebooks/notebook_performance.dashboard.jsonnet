@@ -48,7 +48,7 @@ local image_tagVar =
 // Begin dashboard queries
 //
 local opensearch_queries = {
-    getPythonNotebooksMin():: 
+    getPythonNotebooksMin()::
         g.panel.timeSeries.queryOptions.withDatasource('opensearch', 'opensearch-remote')
         + {
           query: '_index:notebook_performance_benchmark_min_time AND rhoai_version:[[rhoai_version]] AND image:[[image]] AND image_name:[[image_name]] AND image_tag:[[image_tag]]',
@@ -63,11 +63,11 @@ local opensearch_queries = {
           timeField: "@timestamp",
           luceneQueryType: "Metric",
         },
-    getPythonNotebooksMinNoFilter():: 
+    getPythonNotebooksMinMaxDiff()::
         g.panel.timeSeries.queryOptions.withDatasource('opensearch', 'opensearch-remote')
         + {
-          query: '_index:notebook_performance_benchmark_min_time',
-          alias: 'getPythonNotebooksMinNoFilter',
+          query: '_index:notebook_performance_benchmark_min_max_diff AND rhoai_version:[[rhoai_version]] AND image:[[image]] AND image_name:[[image_name]] AND image_tag:[[image_tag]]',
+          alias: 'getPythonNotebooksMinMaxDiff',
           queryType: "lucene",
           metrics: [
             {
@@ -77,12 +77,12 @@ local opensearch_queries = {
           format: "table",
           timeField: "@timestamp",
           luceneQueryType: "Metric",
-        },   
-    getPythonNotebooksMinMaxDiff():: 
+        },
+    getPythonNotebooksMeasures()::
         g.panel.timeSeries.queryOptions.withDatasource('opensearch', 'opensearch-remote')
         + {
-          query: '_index:notebook_performance_benchmark_min_max_diff AND rhoai_version:[[rhoai_version]] AND image:[[image]] AND image_name:[[image_name]] AND image_tag:[[image_tag]]',
-          alias: 'getPythonNotebooksMinMaxDiff',
+          query: '_index:notebook_performance_benchmark_time AND rhoai_version:[[rhoai_version]] AND image:[[image]] AND image_name:[[image_name]] AND image_tag:[[image_tag]]',
+          alias: 'getPythonNotebooksMeasures',
           queryType: "lucene",
           metrics: [
             {
@@ -98,7 +98,6 @@ local opensearch_queries = {
 // End dashboard queries
 //
 
-
 //
 // Begin define transformations
 //
@@ -111,7 +110,17 @@ local myTransformations = {
           options: {
             byVariable: false,
             include: {
-              names: ["@timestamp", "_type", "image", "image_name", "image_tag", "instance_type", "ocp_version", "rhoai_version", "value"]
+              names: [
+                "@timestamp",
+                "_type",
+                "image",
+                "image_name",
+                "image_tag",
+                "instance_type",
+                "ocp_version",
+                "rhoai_version",
+                "value"
+              ]
             }
           }
         }
@@ -131,21 +140,41 @@ local myTransformations = {
         }
       ]
     },
+  extractMeasures()::
+    {
+      transformations: [
+        {
+          id: "extractFields",
+          options: {
+            format: "kvp",
+            keepTime: false,
+            replace: false,
+            source: "value"
+          }
+        }
+      ]
+    },
 };
 //
 // End define transformations
 //
 
 //
-//
+// Begin Plotly boxplot
 //
 local plotly_boxplot = {
   get_labelsEvolution()::
     {
+      "title": "Minimum execution times distribution per image names and tags",
+      "type": "nline-plotlyjs-panel",
       "datasource": {
         "type": "opensearch",
         "uid": "opensearch-remote"
       },
+      "transformations": myTransformations.groupByImage().transformations,
+      "targets": [
+        opensearch_queries.getPythonNotebooksMin()
+      ],
       "options": {
         "allData": {},
         "config": {},
@@ -171,23 +200,54 @@ local plotly_boxplot = {
             "autorange": true
           }
         },
-        "onclick": "// console.log(data);\n// locationService.partial({ 'var-example': 'test' }, true);\n  ",
+        "onclick": |||
+            // console.log(data);
+            // locationService.partial({ 'var-example': 'test' }, true);
+        |||,
         "resScale": 2,
-        "script": "var dataTraces = [];\n\nfor (var i = 1; i < data.series[0].fields.length; i++) {\n  var colorR = getRandomColor()\n  var fills = data.series[0].fields[i].name\n  var trace = {\n    name: data.series[0].fields[i].name,\n    line: {\n      color: colorR,\n      width: 1\n    },\n    y: data.series[0].fields[i].values,\n    type: 'box',\n    fill: 'toself',\n    fillcolor: applyOpacityToColor(colorR),\n    boxpoints: 'all',\n    text: \"asdf\",\n  };\n  dataTraces.push(trace);\n}\n\nfunction getRandomColor() {\n  var color = [\n    Math.floor(Math.random() * 256),\n    Math.floor(Math.random() * 256),\n    Math.floor(Math.random() * 256)\n  ];\n\n  return \"rgba(\" + color.join(\",\") + \",1)\";\n}\n\nfunction applyOpacityToColor(color, opacity) {\n  const rgbaValues = color.match(/\\d+/g).map(Number);\n  rgbaValues[3] = opacity;\n  return `rgba(${rgbaValues.join(\",\")})`;\n}\n\nreturn { data: dataTraces };",
+        "script": |||
+          var dataTraces = [];
+          for (var i = 1; i < data.series[0].fields.length; i++) {
+            var colorR = getRandomColor()
+            var fills = data.series[0].fields[i].name
+            var trace = {
+              name: data.series[0].fields[i].name,
+              line: {
+                color: colorR,
+                width: 1
+              },
+              y: data.series[0].fields[i].values,
+              type: 'box',
+              fill: 'toself',
+              fillcolor: applyOpacityToColor(colorR),
+              boxpoints: 'all',
+              text: "asdf",
+            };
+            dataTraces.push(trace);
+          }
+          function getRandomColor() {
+            var color = [
+              Math.floor(Math.random() * 256),
+              Math.floor(Math.random() * 256),
+              Math.floor(Math.random() * 256)
+            ];
+            return "rgba(" + color.join(",") + ",1)";
+          }
+          function applyOpacityToColor(color, opacity) {
+            const rgbaValues = color.match(/\d+/g).map(Number);
+            rgbaValues[3] = opacity;
+            return `rgba(${rgbaValues.join(",")})`;
+          }
+          return { data: dataTraces };
+        |||,
         "timeCol": "",
         "yamlMode": false
       },
-      "transformations": myTransformations.groupByImage().transformations,
-      "targets": [
-        opensearch_queries.getPythonNotebooksMinNoFilter()
-      ],
-      "title": "Minimum execution times distribution per image names and tags",
-      "type": "nline-plotlyjs-panel"
     },  
   
 };
 //
-//
+// End Plotly boxplot
 //
 
 //
@@ -211,8 +271,9 @@ local panelo = {
         rowHeight=0.8,
         lineWidth=0,
         alignValue='center',
+        transformations={},
     ):: g.panel.stateTimeline.new(title)
-        + myTransformations.filterTestFieldNames()
+        + transformations
         + g.panel.stateTimeline.panelOptions.withDescription(description)
         + g.panel.stateTimeline.queryOptions.withTargets(targets)
         + (if transparent then g.panel.stateTimeline.panelOptions.withTransparent() else {})
@@ -248,7 +309,9 @@ local panelo = {
         drawStyle='points',
         thresholdMode=null,
         thresholdSteps=[],
+        transformations={},
     ):: g.panel.timeSeries.new(title)
+        + transformations
         + g.panel.timeSeries.panelOptions.withDescription(description)
         + g.panel.timeSeries.queryOptions.withTargets(targets)
         + (if transparent then g.panel.timeSeries.panelOptions.withTransparent() else {})
@@ -284,7 +347,8 @@ local statetime ={
     // unit='s',
     decimals=4,
     legendPlacement='left',
-    fillOpacity=60
+    fillOpacity=60,
+    transformations = myTransformations.filterTestFieldNames()
   ),
 };
 
@@ -300,7 +364,22 @@ local timese ={
     legendPlacement='bottom',
     stackingMode='normal',
     fillOpacity=60,
-    gradientMode=null
+    gradientMode=null,
+    transformations ={}
+  ),
+  notebookPerfMeasures:: panelo.timeSeries(
+    title='Time series measures',
+    targets=[
+      opensearch_queries.getPythonNotebooksMeasures(),
+    ],
+    min=0,
+    unit='ms',
+    decimals=8,
+    legendPlacement='bottom',
+    stackingMode='normal',
+    fillOpacity=60,
+    gradientMode=null,
+    transformations = myTransformations.extractMeasures()
   ),
 };
 
@@ -308,7 +387,6 @@ local myPanels = {
   stateTimeline: statetime,
   timeSeries: timese,
 };
-
 //
 // End panels definitions
 //
@@ -336,6 +414,7 @@ g.dashboard.new('Python notebooks performance dashboard')
 + g.dashboard.withPanels([
   myPanels.stateTimeline.notebookPerfMin + w(24) + h(10),
   myPanels.timeSeries.notebookPerfMinMaxDiff + w(24) + h(10),
+  myPanels.timeSeries.notebookPerfMeasures + w(24) + h(10),
   plotly_boxplot.get_labelsEvolution() + w(24) + h(14),
 ])
 //
