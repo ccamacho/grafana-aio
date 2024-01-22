@@ -383,3 +383,7 @@ sequenceDiagram
 - Prometheus as an additional datasource: It looks like Prometheus is supported everywhere, but to support this new data store we will also need to integrate and additional backend to be able to push data in the datastore using a python library. Prometheus includes a local on-disk time series database, but also optionally integrates with remote storage systems. Prometheus's local time series database stores data in a custom, highly efficient format on local storage. To do this something like [Mimir](https://github.com/grafana/mimir) will also need to be included. So far Prometheus is also integrated but there is still missing integrating the place where the data source will be.
 
 - Grafana organization: No tree-like nested [folders in grafana for dashboards](https://github.com/grafana/grafana/issues/10339).
+
+## Live demo
+
+[Live demo here](https://grafana-aio-e7fda8a8f2a4.herokuapp.com/)

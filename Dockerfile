@@ -152,4 +152,4 @@ RUN crontab $HOME/config/cron.conf
 EXPOSE 3000
 
 # We enable the cron execution and we start supervisord
-ENTRYPOINT ["sh", "-c", "cron && /usr/bin/supervisord"]
+ENTRYPOINT ["sh", "-c", "cron; /usr/bin/supervisord"]
