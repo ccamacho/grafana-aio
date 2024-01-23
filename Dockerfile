@@ -7,15 +7,8 @@ FROM grafana/grafana:latest-ubuntu
 
 ### Begin running all the preparation tasks
 USER root
-
-### Create a new user
-# User creation
-ARG USER=grafana-aio
-ARG UID=1001
+ARG USER=grafana
 ARG HOME=/home/$USER
-RUN echo "==> Creating local user account..." && \
-    useradd --create-home --uid $UID --group root $USER
-# Reset passwords
 RUN echo "$USER:$USER" | chpasswd
 RUN echo 'root:root' | chpasswd
 WORKDIR $HOME
@@ -26,7 +19,7 @@ COPY scripts/install_dependencies.sh scripts/install_dependencies.sh
 COPY jsonnet_deps /opt/jsonnet_deps
 RUN ./scripts/install_dependencies.sh
 ### End of moving deps intall here
-# Cleanup
+### Cleanup
 RUN apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -39,23 +32,24 @@ RUN mkdir -p /var/supervisor && \
     chmod -R guo+rw /var/supervisor/ && \
     chmod -R guo+rw /var/log/supervisor/
 
-# Allow processes started from the base user
-# to access files
+### Allow processes started from the base user to access files
 RUN chgrp -R 0 /var
 RUN chgrp -R 0 /run
 RUN chgrp -R 0 /opt
 RUN chgrp -R 0 /etc
-
 RUN chown -R ${USER}:0 /var
 RUN chown -R ${USER}:0 /run
 RUN chown -R ${USER}:0 /opt
 RUN chown -R ${USER}:0 /etc
-
-RUN chmod guo+rw /var
-RUN chmod guo+rw /run
-RUN chmod guo+rw /opt
-RUN chmod guo+rw /etc
-
+RUN chmod -R guo+rw /var
+RUN chmod -R guo+rw /run
+RUN chmod -R guo+rw /opt
+RUN chmod -R guo+rw /etc
+# Influx workarounds for OCP
+RUN mkdir -p /.influxdbv2
+RUN chown -R ${USER}:0 /.influxdbv2
+RUN chmod guo+rw /.influxdbv2
+# Cron perms
 RUN chmod gu+s /usr/sbin/cron
 
 ### Begin copying the custom provisioning configuration files into the container
@@ -99,10 +93,11 @@ RUN find /etc/grafana/provisioning/dashboards \
 # We copy the entrypoint script
 COPY scripts/entrypoint.sh /usr/bin/
 
-USER $USER
+USER grafana
 # Make sure cron is installed
 # RUN crontab $HOME/config/cron.conf
 # Expose the Grafana port
+EXPOSE 3000
 
 # We enable the cron execution and we start supervisord
 # ENTRYPOINT ["sh", "-c", "cron && /usr/bin/supervisord"]

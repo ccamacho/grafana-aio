@@ -20,7 +20,7 @@ set -ex
 #                                                                           #
 #############################################################################
 
-scripts_path="/home/grafana-aio/scripts/"
+scripts_path="/home/grafana/scripts/"
 
 init_influxdb(){
     echo "initialize_data_sync.sh: Get connection details"
