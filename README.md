@@ -386,4 +386,6 @@ sequenceDiagram
 
 ## Live demo
 
-[Live demo here](https://grafana-aio-e7fda8a8f2a4.herokuapp.com/)
+[Grafana](http://grafana-aio.pubstack.com:3000)
+[OpenSearch dashboards](http://grafana-aio.pubstack.com:5601)
+[Prometheus](http://grafana-aio.pubstack.com:9090)
