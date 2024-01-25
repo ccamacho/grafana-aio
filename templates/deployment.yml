@@ -2,14 +2,35 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: ccamacho-dev
+  name: psap--runtime-int
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-aio-config
+  namespace: psap--runtime-int
+data:
+  OPENSEARCH_REMOTE_URL: "https://opensearch-instance.example.com"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: grafana-aio-credentials
+  namespace: psap--runtime-int
+type: Opaque
+data:
+  OPENSEARCH_REMOTE_USERNAME: YWRtaW4=  # base64 encoded username 'admin'
+  OPENSEARCH_REMOTE_PASSWORD: enVxYXBo  # base64 encoded password 'blehbleh'
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: grafana-aio-deployment
-  namespace: ccamacho-dev
+  namespace: psap--runtime-int
+  labels:
+    app: grafana-aio
 spec:
+  replicas: 1
   selector:
     matchLabels:
       app: grafana-aio
@@ -24,32 +45,73 @@ spec:
         imagePullPolicy: Always
         ports:
           - containerPort: 3000
+        resources:
+          limits:
+            memory: 6Gi
+          requests:
+            memory: 3Gi
+        env:
+          - name: OPENSEARCH_REMOTE_URL
+            valueFrom:
+              configMapKeyRef:
+                name: grafana-aio-config
+                key: OPENSEARCH_REMOTE_URL
+          - name: OPENSEARCH_REMOTE_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: grafana-aio-credentials
+                key: OPENSEARCH_REMOTE_USERNAME
+          - name: OPENSEARCH_REMOTE_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: grafana-aio-credentials
+                key: OPENSEARCH_REMOTE_PASSWORD
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: grafana-aio-service
-  namespace: ccamacho-dev
+  namespace: psap--runtime-int
+  labels:
+    app: grafana-aio
 spec:
   type: NodePort
   selector:
     app: grafana-aio
   ports:
-  - port: 3000
+  - protocol: TCP
+    port: 3000
     targetPort: 3000
 ---
 apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
-  name: grafana-aio-route
-  namespace: ccamacho-dev
+  name: grafana-aio-route-tls
+  namespace: psap--runtime-int
+  labels:
+    app: grafana-aio
 spec:
   to:
     kind: Service
     name: grafana-aio-service
-    weight: 100
   port:
     targetPort: 3000
   tls:
     termination: edge
-  insecurePolicy: Redirect
+    insecureEdgeTerminationPolicy: Redirect
+  wildcardPolicy: None
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: grafana-aio-route-notls
+  namespace: psap--runtime-int
+  labels:
+    app: grafana-aio
+spec:
+  to:
+    kind: Service
+    name: grafana-aio-service
+  port:
+    targetPort: 3000
+  wildcardPolicy: None
