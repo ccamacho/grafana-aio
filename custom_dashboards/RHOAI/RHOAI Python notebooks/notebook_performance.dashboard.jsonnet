@@ -140,6 +140,20 @@ local myTransformations = {
         }
       ]
     },
+  groupByRhoaiVersion()::
+    {
+      transformations: [
+        {
+          id: "groupingToMatrix",
+          options: {
+            columnField: "image",
+            rowField: "rhoai_version",
+            valueField: "value",
+            emptyValue: "null"
+          }
+        }
+      ]
+    },
   extractMeasures()::
     {
       transformations: [
@@ -165,7 +179,7 @@ local myTransformations = {
 local plotly_boxplot = {
   get_labelsEvolution()::
     {
-      "title": "Minimum execution times distribution per image names and tags",
+      "title": "Performance distribution between the fastest benchmark runs",
       "type": "nline-plotlyjs-panel",
       "datasource": {
         "type": "opensearch",
@@ -329,6 +343,42 @@ local panelo = {
         + g.panel.timeSeries.fieldConfig.defaults.custom.withDrawStyle(drawStyle)
         + g.panel.timeSeries.fieldConfig.defaults.custom.thresholdsStyle.withMode(thresholdMode)
         + g.panel.timeSeries.standardOptions.thresholds.withSteps(thresholdSteps),
+
+    barChart(
+        title='',
+        description='',
+        targets=[],
+        transparent=false,
+        unit=null,
+        min=null,
+        max=null,
+        decimals=null,
+        legendMode='list',
+        legendPlacement='right',
+        tooltipMode='multi',
+        fillOpacity=6,
+        gradientMode='opacity',
+        axisWidth=null,
+        thresholdMode=null,
+        thresholdSteps=[],
+        transformations={},
+    ):: g.panel.barChart.new(title)
+        + transformations
+        + g.panel.barChart.panelOptions.withDescription(description)
+        + g.panel.barChart.queryOptions.withTargets(targets)
+        + (if transparent then g.panel.barChart.panelOptions.withTransparent() else {})
+        + g.panel.barChart.standardOptions.withUnit(unit)
+        + g.panel.barChart.standardOptions.withMin(min)
+        + g.panel.barChart.standardOptions.withMax(max)
+        + g.panel.barChart.standardOptions.withDecimals(decimals)
+        + g.panel.barChart.options.legend.withDisplayMode(legendMode)
+        + g.panel.barChart.options.legend.withPlacement(legendPlacement)
+        + g.panel.barChart.options.tooltip.withMode(tooltipMode)
+        + g.panel.barChart.fieldConfig.defaults.custom.withFillOpacity(fillOpacity)
+        + g.panel.barChart.fieldConfig.defaults.custom.withGradientMode(gradientMode)
+        + g.panel.barChart.fieldConfig.defaults.custom.withAxisWidth(axisWidth)
+        + g.panel.barChart.fieldConfig.defaults.custom.thresholdsStyle.withMode(thresholdMode)
+        + g.panel.barChart.standardOptions.thresholds.withSteps(thresholdSteps),
 };
 //
 // End panels difinitions
@@ -383,9 +433,39 @@ local timese ={
   ),
 };
 
+local bchart ={
+  notebookPerfMinMaxDiff:: panelo.barChart(
+    title='Evolution of the variations between the fastest and slowest benchmark runs',
+    targets=[
+      opensearch_queries.getPythonNotebooksMinMaxDiff(),
+    ],
+    min=0,
+    unit='s',
+    decimals=2,
+    legendPlacement='bottom',
+    fillOpacity=60,
+    gradientMode=null,
+    transformations = myTransformations.groupByRhoaiVersion()
+  ),
+  notebookPerfMin:: panelo.barChart(
+    title='Evolution of the variations between the fastest benchmark runs',
+    targets=[
+      opensearch_queries.getPythonNotebooksMin(),
+    ],
+    min=0,
+    unit='s',
+    decimals=2,
+    legendPlacement='bottom',
+    fillOpacity=60,
+    gradientMode=null,
+    transformations = myTransformations.groupByRhoaiVersion()
+  ),
+};
+
 local myPanels = {
   stateTimeline: statetime,
   timeSeries: timese,
+  barChart: bchart,
 };
 //
 // End panels definitions
@@ -413,9 +493,11 @@ g.dashboard.new('Python notebooks performance dashboard')
   image_tagVar,
 ])
 + g.dashboard.withPanels([
-  myPanels.stateTimeline.notebookPerfMin + w(24) + h(10),
-  myPanels.timeSeries.notebookPerfMinMaxDiff + w(24) + h(10),
-  myPanels.timeSeries.notebookPerfMeasures + w(24) + h(10),
+  //myPanels.stateTimeline.notebookPerfMin + w(24) + h(10),
+  myPanels.barChart.notebookPerfMinMaxDiff + w(24) + h(10),
+  myPanels.barChart.notebookPerfMin + w(24) + h(10),
+  // myPanels.timeSeries.notebookPerfMinMaxDiff + w(24) + h(10),
+  // myPanels.timeSeries.notebookPerfMeasures + w(24) + h(10),
   plotly_boxplot.get_labelsEvolution() + w(24) + h(14),
 ])
 //
