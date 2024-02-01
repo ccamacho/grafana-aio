@@ -151,6 +151,17 @@ local myTransformations = {
             valueField: "value",
             emptyValue: "null"
           }
+        },
+        {
+          id: "sortBy",
+          options: {
+            fields: {},
+            sort: [
+              {
+                field: "rhoai_version\\image"
+              }
+            ]
+          }
         }
       ]
     },
@@ -164,6 +175,22 @@ local myTransformations = {
             keepTime: false,
             replace: false,
             source: "value"
+          }
+        }
+      ]
+    },
+  sortByRhoaiVersion()::
+    {
+      transformations: [
+        {
+          id: "sortBy",
+          options: {
+            fields: {},
+            sort: [
+              {
+                field: "rhoai_version\\image"
+              }
+            ]
           }
         }
       ]
