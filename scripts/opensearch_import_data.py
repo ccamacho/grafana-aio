@@ -19,6 +19,8 @@ under the License.
 import csv
 import os
 import pathlib
+import time
+import random
 from datetime import datetime
 
 from opensearchpy import OpenSearch
@@ -151,6 +153,69 @@ def opensearch_write_loss(client):
                 refresh=True
             )
 
+def opensearch_write_llama_13b(client):
+    """Write llama13b data in OpenSearch."""
+    index_name = 'rhoai_perfdata_llama13b'
+    index_body = {
+        'settings': {
+            'index': {
+                'number_of_shards': 4
+            }
+        }
+    }
+    # Check if the index already exists
+    if not client.indices.exists(index=index_name):
+        client.indices.create(index=index_name, body=index_body)
+        print(f"Index '{index_name}' created.")
+    else:
+        print(f"Index '{index_name}' already exists.")
+    data_path = os.path.join(current_working_directory, 'scripts/datasets/llama-13b/llama-13b.csv')
+    with open(data_path, 'r') as file:
+        csv_reader = csv.reader(file)
+        header = next(csv_reader)
+        print(header)
+        for row in csv_reader:
+            now = datetime.today()
+
+            # Calculate throughput
+            duration = float(row[8]) - float(row[5])  # end_time - start_time
+            output_tokens_sum = int(row[4])  # Sum of output_tokens
+            throughput = output_tokens_sum / duration if duration != 0 else 0
+
+            document = {
+                "@timestamp": now.strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
+                'user_id': int(row[0]) if len(row) > 0 and row[0] != "" else None,
+                'input_text': str(row[1]) if len(row) > 1 and row[1] != "" else None,
+                'input_tokens': int(row[2]) if len(row) > 2 and row[2] != "" else None,
+                'output_text': str(row[3]) if len(row) > 3 and row[3] != "" else None,
+                'output_tokens': int(row[4]) if len(row) > 4 and row[4] != "" else None,
+                'start_time': float(row[5]) if len(row) > 5 and row[5] != "" else None,
+                'ack_time': float(row[6]) if len(row) > 6 and row[6] != "" else None,
+                'first_token_time': float(row[7]) if len(row) > 7 and row[7] != "" else None,
+                'end_time': float(row[8]) if len(row) > 8 and row[8] != "" else None,
+                'response_time': float(row[9]) if len(row) > 9 and row[9] != "" else None,
+                'tt_ack': float(row[10]) if len(row) > 10 and row[10] != "" else None,
+                'ttft': float(row[11]) if len(row) > 11 and row[11] != "" else None,
+                'tpot': float(row[12]) if len(row) > 12 and row[12] != "" else None,
+                'error_code': int(row[13]) if len(row) > 13 and row[13] != "" else None,
+                'error_text': str(row[14]) if len(row) > 14 and row[14] != "" else None,
+                'max_queries': int(row[15]) if len(row) > 15 and row[15] != "" else None,
+                'max_input_tokens': int(row[16]) if len(row) > 16 and row[16] != "" else None,
+                'max_output_tokens': int(row[17]) if len(row) > 17 and row[17] != "" else None,
+                'load_options_concurrency': int(row[18]) if len(row) > 18 and row[18] != "" else None,
+                'load_options_duration': int(row[19]) if len(row) > 19 and row[19] != "" else None,
+                'plugin': str(row[20]) if len(row) > 20 and row[20] != "" else None,
+                'plugin_options_streaming': str(row[21]) if len(row) > 21 and row[21] != "" else None,
+                'plugin_options_model_name': str(row[22]) if len(row) > 22 and row[22] != "" else None,
+                'extra_metadata_replicas': int(row[23]) if len(row) > 23 and row[23] != "" else None,
+                'throughput': float(throughput),
+            }
+            client.index(
+                index=index_name,
+                body=document,
+                refresh=True
+            )
+
 
 def opensearch_write_throughput(client):
     """Write throughput data in OpenSearch."""
@@ -190,6 +255,104 @@ def opensearch_write_throughput(client):
             )
 
 
+def opensearch_generate_models_data(client):
+    """Generate models data in OpenSearch."""
+
+    model_names = ['bigcode_starcoder',
+                   'bigscience_mt0-xxl',
+                   'eleutherai_gpt-neox-20b',
+                   'elyza_elyza-japanese-llama-2-7b-instruct',
+                   'google_flan-t5-xl',
+                   'google_flan-t5-xxl',
+                   'google_flan-ul2',
+                   'meta-llama_llama-2-13b-chat',
+                   'meta-llama_llama-2-70b-chat']
+    concurrency= [1, 2, 16, 32, 64, 96]
+    kpis = ["kserve_llm_load_test_tpot",
+            #"kserve_llm_load_test_tpot_min",
+            #"kserve_llm_load_test_tpot_max",
+            #"kserve_llm_load_test_tpot_median",
+            #"kserve_llm_load_test_tpot_mean",
+            #"kserve_llm_load_test_tpot_p80",
+            #"kserve_llm_load_test_tpot_p90",
+            #"kserve_llm_load_test_tpot_p95",
+            #"kserve_llm_load_test_tpot_p99",
+            "kserve_llm_load_test_ttft",
+            #"kserve_llm_load_test_ttft_min",
+            #"kserve_llm_load_test_ttft_max",
+            #"kserve_llm_load_test_ttft_median",
+            #"kserve_llm_load_test_ttft_mean",
+            #"kserve_llm_load_test_ttft_p80",
+            #"kserve_llm_load_test_ttft_p90",
+            #"kserve_llm_load_test_ttft_p95",
+            #"kserve_llm_load_test_ttft_p99",
+            "kserve_llm_load_test_model_load_duration",
+            "kserve_llm_load_test_throughput"]
+
+    # rhoai-watsonx-multi__kserve_llm_load_test_tpot
+    # rhoai-watsonx-multi__kserve_llm_load_test_ttft
+    # rhoai-watsonx-multi__kserve_llm_load_test_model_load_duration
+    # rhoai-watsonx-multi__kserve_llm_load_test_throughput
+
+    start_timestamp = int(time.mktime(time.strptime("2024-01-01", "%Y-%m-%d"))) * 1000  # Convert to milliseconds
+    end_timestamp = int(datetime.now().timestamp() * 1000)
+
+    index_body = {
+        'settings': {
+            'index': {
+                'number_of_shards': 4
+            }
+        }
+    }
+
+    # Calculate the total number of days in the range
+    total_days = (end_timestamp - start_timestamp) // (24 * 60 * 60 * 1000)  # Convert milliseconds to days
+
+    for model_idx, model_name in enumerate(model_names):
+        for kpi_idx, kpi in enumerate(kpis):
+            index_name = f'rhoai-watsonx-multi__{kpi}'
+            # Check if the index already exists
+            if not client.indices.exists(index=index_name):
+                client.indices.create(index=index_name, body=index_body)
+                print(f"Index '{index_name}' created.")
+            else:
+                print(f"Index '{index_name}' already exists.")
+
+            for i in range(total_days):
+                # Get the current day start timestamp
+                current_day_start = start_timestamp + i * (24 * 60 * 60 * 1000)
+
+                # Insert datapoints at 8:00 and 20:00 for each day
+                for hour in [8, 20]:
+                    # Calculate timestamp for 8:00 or 20:00
+                    timestamp = current_day_start + (hour * 60 * 60 * 1000)
+
+                    # Calculate adjustment factors
+                    model_adjustment = model_idx * 20
+                    kpi_adjustment = kpi_idx * 10
+
+                    # Randomly select concurrency value
+                    for concurrency_val in concurrency:
+                        # Additional adjustment based on concurrency value
+                        concurrency_adjustment = int(concurrency_val) * 5
+                        
+                        datetime_obj = datetime.fromtimestamp(timestamp / 1000)  # Convert milliseconds to seconds
+                        document = {
+                            "@timestamp": datetime_obj.strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
+                            "value": float(random.uniform(0.85 + model_adjustment + kpi_adjustment + concurrency_adjustment, 0.92 + model_adjustment + kpi_adjustment + concurrency_adjustment)),
+                            "model_name": str(model_name),
+                            "concurrency": int(concurrency_val),
+                            "rhoai_version": "3.45.1rc2",
+                            "ocp_version": "4.15",
+                            "gpu_model": "DGX A100"
+                        }
+                        client.index(
+                            index=index_name,
+                            body=document,
+                            refresh=True
+                        )
+
+
 def main():
     """Generate random data for OpenSearch."""
     script_executed = '/tmp/opensearch_import_data_executed'
@@ -217,6 +380,8 @@ def main():
     opensearch_write_latency(client)
     opensearch_write_loss(client)
     opensearch_write_throughput(client)
+    opensearch_write_llama_13b(client)
+    opensearch_generate_models_data(client)
     client.close()
     print('example_time_series_data.py: Finished example_time_series_data')
 
