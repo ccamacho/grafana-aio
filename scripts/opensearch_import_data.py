@@ -21,9 +21,10 @@ import os
 import pathlib
 import time
 import random
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from opensearchpy import OpenSearch
+from opensearchpy.exceptions import AuthorizationException
 
 current_working_directory = pathlib.Path.home()
 
@@ -259,15 +260,15 @@ def opensearch_generate_models_data(client):
     """Generate models data in OpenSearch."""
 
     model_names = ['bigcode_starcoder',
-                   'bigscience_mt0-xxl',
-                   'eleutherai_gpt-neox-20b',
-                   'elyza_elyza-japanese-llama-2-7b-instruct',
-                   'google_flan-t5-xl',
-                   'google_flan-t5-xxl',
+                   #'bigscience_mt0-xxl',
+                   #'eleutherai_gpt-neox-20b',
+                   #'elyza_elyza-japanese-llama-2-7b-instruct',
+                   #'google_flan-t5-xl',
+                   #'google_flan-t5-xxl',
                    'google_flan-ul2',
                    'meta-llama_llama-2-13b-chat',
                    'meta-llama_llama-2-70b-chat']
-    concurrency= [1, 2, 16, 32, 64, 96]
+    virtual_users= [1, 2, 16] #, 32, 64, 96]
     kpis = ["kserve_llm_load_test_tpot",
             #"kserve_llm_load_test_tpot_min",
             #"kserve_llm_load_test_tpot_max",
@@ -289,13 +290,100 @@ def opensearch_generate_models_data(client):
             "kserve_llm_load_test_model_load_duration",
             "kserve_llm_load_test_throughput"]
 
-    # rhoai-watsonx-multi__kserve_llm_load_test_tpot
-    # rhoai-watsonx-multi__kserve_llm_load_test_ttft
-    # rhoai-watsonx-multi__kserve_llm_load_test_model_load_duration
-    # rhoai-watsonx-multi__kserve_llm_load_test_throughput
+    # psap-rhoai.watsonx-kserve-single-light__kserve_llm_load_test_tpot
+    # psap-rhoai.watsonx-kserve-single-light__kserve_llm_load_test_ttft
+    # psap-rhoai.watsonx-kserve-single-light__kserve_llm_load_test_model_load_duration
+    # psap-rhoai.watsonx-kserve-single-light__kserve_llm_load_test_throughput
 
-    start_timestamp = int(time.mktime(time.strptime("2024-01-01", "%Y-%m-%d"))) * 1000  # Convert to milliseconds
-    end_timestamp = int(datetime.now().timestamp() * 1000)
+    release_body = {
+        'settings': {
+            'index': {
+                'number_of_shards': 4
+            }
+        },
+        'mappings': {
+            'properties': {
+                '@timestamp': {'type': 'date'},
+                'software': {'type': 'keyword'},
+                'tags': {'type': 'keyword'},
+                'version': {'type': 'keyword'}
+            }
+        }
+    }
+
+    # Check if the index already exists
+    index_name = 'rhoai_releases'
+    if not client.indices.exists(index=index_name):
+        client.indices.create(index=index_name, body=release_body)
+        print(f"Index '{index_name}' created.")
+    else:
+        print(f"Index '{index_name}' already exists.")
+        
+    releases = [
+        {
+            "@timestamp": "2023-01-24T00:00:00.000Z",
+            "software": "OCP",
+            "version": "4.10"
+        },
+        {
+            "@timestamp": "2023-04-24T00:00:00.000Z",
+            "software": "OCP",
+            "version": "4.11"
+        },
+        {
+            "@timestamp": "2023-08-24T00:00:00.000Z",
+            "software": "OCP",
+            "version": "4.12"
+        },
+        {
+            "@timestamp": "2023-12-24T00:00:00.000Z",
+            "software": "OCP",
+            "version": "4.13"
+        },
+        {
+            "@timestamp": "2024-01-24T00:00:00.000Z",
+            "software": "OCP",
+            "version": "4.14"
+        },
+        {
+            "@timestamp": "2024-03-04T00:00:00.000Z",
+            "software": "OCP",
+            "version": "4.15"
+        },
+        {
+            "@timestamp": "2023-01-01T00:00:00.000Z",
+            "software": "RHODS",
+            "version": "2.4.10"
+        },
+        {
+            "@timestamp": "2023-04-01T00:00:00.000Z",
+            "software": "RHODS",
+            "version": "2.4.11"
+        },
+        {
+            "@timestamp": "2023-08-01T00:00:00.000Z",
+            "software": "RHODS",
+            "version": "2.4.12"
+        },
+        {
+            "@timestamp": "2023-12-01T00:00:00.000Z",
+            "software": "RHODS",
+            "version": "2.4.13"
+        },
+        {
+            "@timestamp": "2024-03-04T00:00:00.000Z",
+            "software": "RHODS",
+            "version": "2.4.14"
+        },
+        {
+            "@timestamp": "2024-03-01T00:00:00.000Z",
+            "software": "RHODS",
+            "version": "2.4.15"
+        },
+    ]
+    for release in releases:
+        client.index(index=index_name, body=release, refresh=True)
+        print(f"Document inserted: {release}")
 
     index_body = {
         'settings': {
@@ -305,12 +393,13 @@ def opensearch_generate_models_data(client):
         }
     }
 
-    # Calculate the total number of days in the range
-    total_days = (end_timestamp - start_timestamp) // (24 * 60 * 60 * 1000)  # Convert milliseconds to days
+    start_date = datetime(2023, 1, 1)
+    end_date = datetime.now()
 
     for model_idx, model_name in enumerate(model_names):
         for kpi_idx, kpi in enumerate(kpis):
-            index_name = f'rhoai-watsonx-multi__{kpi}'
+            index_name = f'psap-rhoai.watsonx-kserve-single-light__{kpi}'
+
             # Check if the index already exists
             if not client.indices.exists(index=index_name):
                 client.indices.create(index=index_name, body=index_body)
@@ -318,39 +407,34 @@ def opensearch_generate_models_data(client):
             else:
                 print(f"Index '{index_name}' already exists.")
 
-            for i in range(total_days):
-                # Get the current day start timestamp
-                current_day_start = start_timestamp + i * (24 * 60 * 60 * 1000)
-
-                # Insert datapoints at 8:00 and 20:00 for each day
-                for hour in [8, 20]:
-                    # Calculate timestamp for 8:00 or 20:00
-                    timestamp = current_day_start + (hour * 60 * 60 * 1000)
+            current_date = start_date
+            while current_date <= end_date:
+                for hour in [20]: # for hour in [8, 20]
+                    timestamp = current_date.replace(hour=hour, minute=0, second=0, microsecond=0)
 
                     # Calculate adjustment factors
                     model_adjustment = model_idx * 20
                     kpi_adjustment = kpi_idx * 10
 
-                    # Randomly select concurrency value
-                    for concurrency_val in concurrency:
-                        # Additional adjustment based on concurrency value
-                        concurrency_adjustment = int(concurrency_val) * 5
+                    for virtual_users_val in virtual_users:
+                        virtual_users_adjustment = int(virtual_users_val) * 5
                         
-                        datetime_obj = datetime.fromtimestamp(timestamp / 1000)  # Convert milliseconds to seconds
                         document = {
-                            "@timestamp": datetime_obj.strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
-                            "value": float(random.uniform(0.85 + model_adjustment + kpi_adjustment + concurrency_adjustment, 0.92 + model_adjustment + kpi_adjustment + concurrency_adjustment)),
+                            "@timestamp": timestamp.strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
+                            "value": float(random.uniform(0.85 + model_adjustment + kpi_adjustment + virtual_users_adjustment, 0.92 + model_adjustment + kpi_adjustment + virtual_users_adjustment)),
                             "model_name": str(model_name),
-                            "concurrency": int(concurrency_val),
+                            "virtual_users": int(virtual_users_val),
                             "rhoai_version": "3.45.1rc2",
                             "ocp_version": "4.15",
-                            "gpu_model": "DGX A100"
+                            "accelerator_name": "DGX A100"
                         }
                         client.index(
                             index=index_name,
                             body=document,
                             refresh=True
                         )
+                # We run the tests every week        
+                current_date += timedelta(days=7)
 
 
 def main():
@@ -376,12 +460,17 @@ def main():
         ssl_show_warn=False,
     )
 
-    opensearch_write_accuracy(client)
-    opensearch_write_latency(client)
-    opensearch_write_loss(client)
-    opensearch_write_throughput(client)
-    opensearch_write_llama_13b(client)
-    opensearch_generate_models_data(client)
+    try:
+        opensearch_write_accuracy(client)
+        opensearch_write_latency(client)
+        opensearch_write_loss(client)
+        opensearch_write_throughput(client)
+        opensearch_write_llama_13b(client)
+        opensearch_generate_models_data(client)
+    except AuthorizationException as e:
+        print(f"Failed to create index: {e}")
+        print("Check there is space on disk")
+
     client.close()
     print('example_time_series_data.py: Finished example_time_series_data')
 

@@ -16,8 +16,8 @@ local model_nameVar =
   + var.query.selectionOptions.withIncludeAll()
   + var.custom.selectionOptions.withMulti();
 
-local concurrencyVar =
-  var.query.new('concurrency', '{"find": "terms", "field": "concurrency", "query": "*"}')
+local virtual_usersVar =
+  var.query.new('virtual_users', '{"find": "terms", "field": "virtual_users", "query": "*"}')
   + var.query.withDatasource(
     type='opensearch',
     uid='opensearch-local',
@@ -43,8 +43,8 @@ local ocp_versionVar =
   + var.query.selectionOptions.withIncludeAll()
   + var.custom.selectionOptions.withMulti();
 
-local gpu_modelVar =
-  var.query.new('gpu_model', '{"find": "terms",  "field": "gpu_model.keyword"}')
+local accelerator_nameVar =
+  var.query.new('accelerator_name', '{"find": "terms",  "field": "accelerator_name.keyword"}')
   + var.query.withDatasource(
     type='opensearch',
     uid='opensearch-local',
@@ -62,7 +62,7 @@ local opensearch_queries = {
     get_kserve_llm_load_test_tpot()::
         g.panel.timeSeries.queryOptions.withDatasource('opensearch', 'opensearch-local')
         + {
-          query: '_index:rhoai-watsonx-multi__kserve_llm_load_test_tpot AND model_name:[[model_name]] AND concurrency:[[concurrency]] AND rhoai_version:[[rhoai_version]] AND ocp_version:[[ocp_version]] AND gpu_model:[[gpu_model]]',
+          query: '_index:psap-rhoai.watsonx-kserve-single-light__kserve_llm_load_test_tpot AND model_name:[[model_name]] AND virtual_users:[[virtual_users]] AND rhoai_version:[[rhoai_version]] AND ocp_version:[[ocp_version]] AND accelerator_name:[[accelerator_name]]',
           alias: 'get_kserve_llm_load_test_tpot',
           queryType: "lucene",
           metrics: [
@@ -77,7 +77,7 @@ local opensearch_queries = {
     get_kserve_llm_load_test_ttft()::
         g.panel.timeSeries.queryOptions.withDatasource('opensearch', 'opensearch-local')
         + {
-          query: '_index:rhoai-watsonx-multi__kserve_llm_load_test_ttft AND model_name:[[model_name]] AND concurrency:[[concurrency]] AND rhoai_version:[[rhoai_version]] AND ocp_version:[[ocp_version]] AND gpu_model:[[gpu_model]]',
+          query: '_index:psap-rhoai.watsonx-kserve-single-light__kserve_llm_load_test_ttft AND model_name:[[model_name]] AND virtual_users:[[virtual_users]] AND rhoai_version:[[rhoai_version]] AND ocp_version:[[ocp_version]] AND accelerator_name:[[accelerator_name]]',
           alias: 'get_kserve_llm_load_test_ttft',
           queryType: "lucene",
           metrics: [
@@ -92,7 +92,7 @@ local opensearch_queries = {
     get_kserve_llm_load_test_model_load_duration()::
         g.panel.timeSeries.queryOptions.withDatasource('opensearch', 'opensearch-local')
         + {
-          query: '_index:rhoai-watsonx-multi__kserve_llm_load_test_model_load_duration AND model_name:[[model_name]] AND concurrency:[[concurrency]] AND rhoai_version:[[rhoai_version]] AND ocp_version:[[ocp_version]] AND gpu_model:[[gpu_model]]',
+          query: '_index:psap-rhoai.watsonx-kserve-single-light__kserve_llm_load_test_model_load_duration AND model_name:[[model_name]] AND virtual_users:[[virtual_users]] AND rhoai_version:[[rhoai_version]] AND ocp_version:[[ocp_version]] AND accelerator_name:[[accelerator_name]]',
           alias: 'get_kserve_llm_load_test_model_load_duration',
           queryType: "lucene",
           metrics: [
@@ -107,7 +107,7 @@ local opensearch_queries = {
     get_kserve_llm_load_test_throughput()::
         g.panel.timeSeries.queryOptions.withDatasource('opensearch', 'opensearch-local')
         + {
-          query: '_index:rhoai-watsonx-multi__kserve_llm_load_test_throughput AND model_name:[[model_name]] AND concurrency:[[concurrency]] AND rhoai_version:[[rhoai_version]] AND ocp_version:[[ocp_version]] AND gpu_model:[[gpu_model]]',
+          query: '_index:psap-rhoai.watsonx-kserve-single-light__kserve_llm_load_test_throughput AND model_name:[[model_name]] AND virtual_users:[[virtual_users]] AND rhoai_version:[[rhoai_version]] AND ocp_version:[[ocp_version]] AND accelerator_name:[[accelerator_name]]',
           alias: 'get_kserve_llm_load_test_throughput',
           queryType: "lucene",
           metrics: [
@@ -125,10 +125,81 @@ local opensearch_queries = {
 //
 
 //
+// Begin dashboard annotations
+//
+local annot = g.dashboard.annotation;
+
+local rhods_annotation =
+  annot.withEnable(true)
+  + annot.withName("RHODS releases")
+  + annot.withIconColor("#ec5353")
+  + annot.withDatasource('opensearch-local')
+  + annot.filter.withExclude(value=false)
+  + annot.filter.withIds(12)
+  + {
+    query: "_index:rhoai_releases AND software:RHODS",
+    target: {
+      query: "_index:rhoai_releases",
+      refId: "annotation_query"
+    },
+    tagsField: "version",
+    textField: "software",
+    timeField: "@timestamp"
+  };
+
+local ocp_annotation =
+  annot.withEnable(true)
+  + annot.withName("OCP releases")
+  + annot.withIconColor("#00aaff")
+  + annot.withDatasource('opensearch-local')
+  + annot.filter.withExclude(value=false)
+  + annot.filter.withIds(12)
+  + {
+    query: "_index:rhoai_releases AND software:OCP",
+    target: {
+      query: "_index:rhoai_releases",
+      refId: "annotation_query"
+    },
+    tagsField: "version",
+    textField: "software",
+    timeField: "@timestamp"
+  };
+
+//
+// End dashboard annotations
+//
+
+//
 // Begin define transformations
 //
 local myTransformations = {
-  groupByModelAndSort()::
+  groupByModelSortByTimestamp()::
+    {
+      transformations: [
+        {
+          id: "groupingToMatrix",
+          options: {
+            columnField: "model_name",
+            rowField: "@timestamp",
+            valueField: "value",
+            emptyValue: "null"
+          }
+        },
+        {
+          id: "convertFieldType",
+          options: {
+            fields: {},
+            conversions: [
+              {
+                targetField: "@timestamp\\model_name",
+                destinationType: "time"
+              }
+            ]
+          }
+        },
+      ]
+    },
+  groupByConcurrencyAndSort()::
     {
       transformations: [
         {
@@ -137,7 +208,7 @@ local myTransformations = {
             fields: {},
             sort: [
               {
-                field: "concurrency"
+                field: "virtual_users"
               }
             ]
           }
@@ -148,7 +219,7 @@ local myTransformations = {
             fields: {},
             conversions: [
               {
-                targetField: "concurrency",
+                targetField: "virtual_users",
                 destinationType: "string"
               }
             ]
@@ -158,7 +229,32 @@ local myTransformations = {
           id: "groupingToMatrix",
           options: {
             columnField: "model_name",
-            rowField: "concurrency",
+            rowField: "virtual_users",
+            valueField: "value",
+            emptyValue: "null"
+          }
+        },
+      ]
+    },
+  groupByModelAndSort()::
+    {
+      transformations: [
+        {
+          id: "sortBy",
+          options: {
+            fields: {},
+            sort: [
+              {
+                field: "model"
+              }
+            ]
+          }
+        },
+        {
+          id: "groupingToMatrix",
+          options: {
+            columnField: "model_name",
+            rowField: "model_name",
             valueField: "value",
             emptyValue: "null"
           }
@@ -175,7 +271,7 @@ local myOverrides = {
       {
         matcher: {
           id: "byName",
-          options: "concurrency\\model_name"
+          options: "virtual_users\\model_name"
         },
         properties: [
           {
@@ -187,7 +283,7 @@ local myOverrides = {
       {
         matcher: {
           id: "byName",
-          options: "concurrency\\model_name"
+          options: "virtual_users\\model_name"
         },
         properties: [
           {
@@ -341,12 +437,14 @@ local panelo = {
 
     timeSeries(
         title='',
+        id=null,
         description='',
         targets=[],
         transparent=false,
         unit=null,
         min=null,
         max=null,
+        axisLabel='',
         decimals=null,
         legendMode='list',
         legendPlacement='right',
@@ -376,6 +474,7 @@ local panelo = {
         + g.panel.timeSeries.fieldConfig.defaults.custom.withGradientMode(gradientMode)
         + g.panel.timeSeries.fieldConfig.defaults.custom.withAxisWidth(axisWidth)
         + g.panel.timeSeries.fieldConfig.defaults.custom.withDrawStyle(drawStyle)
+        + g.panel.timeSeries.fieldConfig.defaults.custom.withAxisLabel(axisLabel)
         + g.panel.timeSeries.fieldConfig.defaults.custom.thresholdsStyle.withMode(thresholdMode)
         + g.panel.timeSeries.standardOptions.thresholds.withSteps(thresholdSteps),
 
@@ -391,15 +490,19 @@ local panelo = {
         axisLabel='',
         legendMode='table',
         legendPlacement='right',
-        legendCalcs=['max', 'min', 'mean', 'variance'],
+        legendCalcs=[],
+        stacking=null,
         tooltipMode='multi',
         fillOpacity=6,
         gradientMode='opacity',
         axisWidth=null,
+        withXTickLabelMaxLength=null,
+        withXTickLabelRotation=0,
+        withXTickLabelSpacing=0,
         thresholdMode=null,
         thresholdSteps=[],
         transformations={},
-        overrides={},
+        overrides=[],
     ):: g.panel.barChart.new(title)
         + transformations
         + g.panel.barChart.panelOptions.withDescription(description)
@@ -409,6 +512,10 @@ local panelo = {
         + g.panel.barChart.standardOptions.withMin(min)
         + g.panel.barChart.standardOptions.withMax(max)
         + g.panel.barChart.standardOptions.withDecimals(decimals)
+        + (if stacking != null then g.panel.barChart.options.withStacking(stacking) else {})        
+        + g.panel.barChart.options.withXTickLabelMaxLength(withXTickLabelMaxLength)
+        + g.panel.barChart.options.withXTickLabelRotation(withXTickLabelRotation)
+        + g.panel.barChart.options.withXTickLabelSpacing(withXTickLabelSpacing)
         + g.panel.barChart.options.legend.withDisplayMode(legendMode)
         + g.panel.barChart.options.legend.withPlacement(legendPlacement)
         + g.panel.barChart.options.legend.withCalcs(legendCalcs)
@@ -436,46 +543,113 @@ local statetime ={
       opensearch_queries.getPythonNotebooksMin(),
     ],
     min=0,
-    // unit='s',
+    unit='ms',
     decimals=4,
     legendPlacement='left',
     fillOpacity=60,
-    transformations = myTransformations.filterTestFieldNames()
+    transformations = myTransformations.groupByModelSortByTimestamp()
   ),
 };
 
 local timese ={
-  notebookPerfMinMaxDiff:: panelo.timeSeries(
-    title='Difference between min and max',
+  kserve_llm_load_test_throughput:: panelo.timeSeries(
+    title='Kserve LLM load test throughput over time',
+    description='Output Tokens per Second; Higher is better',
     targets=[
-      opensearch_queries.getPythonNotebooksMinMaxDiff(),
+      opensearch_queries.get_kserve_llm_load_test_throughput(),
     ],
+    id='Kserve LLM load test throughput over time',
     min=0,
-    unit='ms',
-    decimals=8,
+    axisLabel='Throughput',
+    unit='',
+    decimals=0,
     legendPlacement='bottom',
     stackingMode='normal',
     fillOpacity=60,
+    drawStyle='line',
     gradientMode=null,
-    transformations ={}
-  ),
-  notebookPerfMeasures:: panelo.timeSeries(
-    title='Time series measures',
-    targets=[
-      opensearch_queries.getPythonNotebooksMeasures(),
-    ],
-    min=0,
-    unit='ms',
-    decimals=8,
-    legendPlacement='bottom',
-    stackingMode='normal',
-    fillOpacity=60,
-    gradientMode=null,
-    transformations = myTransformations.extractMeasures()
+    transformations = myTransformations.groupByModelSortByTimestamp()
   ),
 };
 
 local bchart ={
+  kserve_llm_load_test_tpot_m:: panelo.barChart(
+    title='Kserve LLM load test TPOT',
+    targets=[
+      opensearch_queries.get_kserve_llm_load_test_tpot(),
+    ],
+    min=0,
+    axisLabel='Time',
+    unit='ms',
+    decimals=2,
+    stacking='normal',
+    legendPlacement='bottom',
+    withXTickLabelMaxLength=8,
+    withXTickLabelRotation=-45,
+    fillOpacity=60,
+    gradientMode=null,
+    legendMode='list',
+    transformations = myTransformations.groupByModelAndSort(),
+    //overrides = myOverrides.AxisAndModel().overrides
+  ),
+  kserve_llm_load_test_ttft_m:: panelo.barChart(
+    title='Kserve LLM load test TTFT',
+    targets=[
+      opensearch_queries.get_kserve_llm_load_test_ttft(),
+    ],
+    min=0,
+    axisLabel='Time',
+    unit='ms',
+    decimals=2,
+    stacking='normal',
+    legendPlacement='bottom',
+    withXTickLabelMaxLength=8,
+    withXTickLabelRotation=-45,
+    fillOpacity=60,
+    gradientMode=null,
+    legendMode='list',
+    transformations = myTransformations.groupByModelAndSort(),
+    //overrides = myOverrides.AxisAndModel().overrides
+  ),
+  kserve_llm_load_test_model_load_duration_m:: panelo.barChart(
+    title='Kserve LLM load test duration',
+    targets=[
+      opensearch_queries.get_kserve_llm_load_test_model_load_duration(),
+    ],
+    min=0,
+    axisLabel='Time',
+    unit='ms',
+    decimals=2,
+    stacking='normal',
+    legendPlacement='bottom',
+    withXTickLabelMaxLength=8,
+    withXTickLabelRotation=-45,
+    fillOpacity=60,
+    gradientMode=null,
+    legendMode='list',
+    transformations = myTransformations.groupByModelAndSort(),
+    //overrides = myOverrides.AxisAndModel().overrides
+  ),
+  kserve_llm_load_test_throughput_m:: panelo.barChart(
+    title='Kserve LLM load test throughput',
+    description='Output Tokens per Second; Higher is better',
+    targets=[
+      opensearch_queries.get_kserve_llm_load_test_throughput(),
+    ],
+    min=0,
+    axisLabel='Throughput',
+    unit='',
+    decimals=0,
+    stacking='normal',
+    legendPlacement='bottom',
+    withXTickLabelMaxLength=8,
+    withXTickLabelRotation=-45,
+    fillOpacity=60,
+    gradientMode=null,
+    legendMode='list',
+    transformations = myTransformations.groupByModelAndSort(),
+    //overrides = myOverrides.AxisAndModel().overrides
+  ),
   kserve_llm_load_test_tpot:: panelo.barChart(
     title='Kserve LLM load test TPOT',
     targets=[
@@ -488,7 +662,8 @@ local bchart ={
     legendPlacement='bottom',
     fillOpacity=60,
     gradientMode=null,
-    transformations = myTransformations.groupByModelAndSort(),
+    legendCalcs=['max', 'min', 'mean', 'variance'],
+    transformations = myTransformations.groupByConcurrencyAndSort(),
     overrides = myOverrides.AxisAndModel().overrides
   ),
   kserve_llm_load_test_ttft:: panelo.barChart(
@@ -503,7 +678,8 @@ local bchart ={
     legendPlacement='bottom',
     fillOpacity=60,
     gradientMode=null,
-    transformations = myTransformations.groupByModelAndSort(),
+    legendCalcs=['max', 'min', 'mean', 'variance'],
+    transformations = myTransformations.groupByConcurrencyAndSort(),
     overrides = myOverrides.AxisAndModel().overrides
   ),
   kserve_llm_load_test_model_load_duration:: panelo.barChart(
@@ -518,7 +694,8 @@ local bchart ={
     legendPlacement='bottom',
     fillOpacity=60,
     gradientMode=null,
-    transformations = myTransformations.groupByModelAndSort(),
+    legendCalcs=['max', 'min', 'mean', 'variance'],
+    transformations = myTransformations.groupByConcurrencyAndSort(),
     overrides = myOverrides.AxisAndModel().overrides
   ),
   kserve_llm_load_test_throughput:: panelo.barChart(
@@ -527,13 +704,14 @@ local bchart ={
       opensearch_queries.get_kserve_llm_load_test_throughput(),
     ],
     min=0,
-    axisLabel='Time',
-    unit='ms',
-    decimals=2,
+    axisLabel='Throughput',
+    unit='',
+    decimals=0,
     legendPlacement='bottom',
     fillOpacity=60,
     gradientMode=null,
-    transformations = myTransformations.groupByModelAndSort(),
+    legendCalcs=['max', 'min', 'mean', 'variance'],
+    transformations = myTransformations.groupByConcurrencyAndSort(),
     overrides = myOverrides.AxisAndModel().overrides
   ),
 };
@@ -550,8 +728,10 @@ local myPanels = {
 //
 // Begin dashboard definition
 //
-local w = g.panel.timeSeries.gridPos.withW;
-local h = g.panel.timeSeries.gridPos.withH;
+local w = g.panel.barChart.gridPos.withW;
+local h = g.panel.barChart.gridPos.withH;
+local x = g.panel.barChart.gridPos.withX;
+local y = g.panel.barChart.gridPos.withY;
 
 g.dashboard.new('Kserve LLM load tests')
 + g.dashboard.withDescription('Load test results for Kserve LLM')
@@ -564,17 +744,31 @@ g.dashboard.new('Kserve LLM load tests')
 + g.dashboard.graphTooltip.withSharedCrosshair()
 + g.dashboard.withVariables([
   model_nameVar,
-  concurrencyVar,
+  virtual_usersVar,
   rhoai_versionVar,
   ocp_versionVar,
-  gpu_modelVar,
+  accelerator_nameVar,
 ])
-+ g.dashboard.withPanels([
-  myPanels.barChart.kserve_llm_load_test_tpot + w(24) + h(14),
-  myPanels.barChart.kserve_llm_load_test_ttft + w(24) + h(14),
-  myPanels.barChart.kserve_llm_load_test_model_load_duration + w(24) + h(14),
-  myPanels.barChart.kserve_llm_load_test_throughput + w(24) + h(14),
++ g.dashboard.withAnnotations([
+  rhods_annotation,
+  ocp_annotation,
 ])
++ g.dashboard.withPanels(
+[
+  g.panel.row.new("LLM Load tests by model") + x(0) + y(0),
+  myPanels.barChart.kserve_llm_load_test_tpot_m + x(0) + y(1) + w(6) + h(11),
+  myPanels.barChart.kserve_llm_load_test_ttft_m + x(6) + y(1) + w(6) + h(11),
+  myPanels.barChart.kserve_llm_load_test_model_load_duration_m + x(12) + y(1) + w(6) + h(11),
+  myPanels.barChart.kserve_llm_load_test_throughput_m + x(18) + y(1) + w(6) + h(11),
+  g.panel.row.new("LLM Load tests by virtual_users") + x(0) + y(12),
+  myPanels.barChart.kserve_llm_load_test_tpot + x(0) + y(13)  + w(12) + h(14),
+  myPanels.barChart.kserve_llm_load_test_ttft + x(12) + y(13)  + w(12) + h(14),
+  myPanels.barChart.kserve_llm_load_test_model_load_duration + x(0) + y(27)  + w(12) + h(14),
+  myPanels.barChart.kserve_llm_load_test_throughput + x(12) + y(27)  + w(12) + h(14),
+  g.panel.row.new("LLM Load tests over time") + x(0) + y(28),
+  myPanels.timeSeries.kserve_llm_load_test_throughput + x(0) + y(29)  + w(24) + h(14),
+])
+
 //
 // End dashboard definition
 //
