@@ -2,13 +2,13 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: psap-production--runtime-int
+  name: psap--runtime-int
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: grafana-aio-config
-  namespace: psap-production--runtime-int
+  namespace: psap--runtime-int
 data:
   OPENSEARCH_REMOTE_URL: "https://opensearch-instance.example.com" # OpenSearch instance URL
 ---
@@ -16,7 +16,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: grafana-aio-credentials
-  namespace: psap-production--runtime-int
+  namespace: psap--runtime-int
 type: Opaque
 data:
   OPENSEARCH_REMOTE_USERNAME: YWRtaW4=  # base64 encoded username 'admin'
@@ -26,7 +26,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: grafana-aio-deployment
-  namespace: psap-production--runtime-int
+  namespace: psap--runtime-int
   labels:
     app: grafana-aio
 spec:
@@ -39,6 +39,10 @@ spec:
       labels:
         app: grafana-aio
     spec:
+      hostAliases:
+      - ip: 4.5.6.7
+        hostnames:
+        - thisisahost.example.com
       containers:
       - name: grafana-aio
         image: ghcr.io/ccamacho/grafana-aio:latest
@@ -71,7 +75,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: grafana-aio-service
-  namespace: psap-production--runtime-int
+  namespace: psap--runtime-int
   labels:
     app: grafana-aio
 spec:
@@ -87,7 +91,7 @@ apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
   name: grafana-aio-route
-  namespace: psap-production--runtime-int
+  namespace: psap--runtime-int
   labels:
     app: grafana-aio
     shard: internal

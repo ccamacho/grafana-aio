@@ -90,8 +90,18 @@ run_once(){
         echo "initialize_data_sync.sh: Initdb already executed. Exiting."
         return
     fi
+
     init_influxdb
     init_syncdata
+
+    sleep 5
+    curl -XPOST -H "Content-Type: application/json" -d '{
+    "name":"readonly",
+    "email":"readonly@example.com",
+    "login":"readonly",
+    "password":"readonly"
+    }' http://administrator:1234@localhost:3000/api/admin/users
+
     echo "initialize_data_sync.sh: status in $temp_file"
     echo "initialize_data_sync.sh: was executed" > $temp_file
 }

@@ -28,7 +28,7 @@ set -ex
 # Install packages and dependencies
 apt-get update -y
 apt-get upgrade -y
-apt-get install -y git jq wget nano python3 python3-pip build-essential tar curl zip unzip pkg-config libpcap-dev
+apt-get install -y git jq wget nano python3 python3-pip build-essential tar curl zip unzip pkg-config libpcap-dev dnsutils iputils-ping
 # Install supervisor, and cron
 apt-get install -y supervisor cron
 # Install InfluxDB v2 available
