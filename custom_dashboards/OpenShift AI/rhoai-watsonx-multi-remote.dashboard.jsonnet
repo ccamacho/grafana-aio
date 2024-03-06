@@ -733,8 +733,8 @@ local h = g.panel.barChart.gridPos.withH;
 local x = g.panel.barChart.gridPos.withX;
 local y = g.panel.barChart.gridPos.withY;
 
-g.dashboard.new('Kserve LLM load tests (REMOTE)')
-+ g.dashboard.withDescription('Load test results for Kserve LLM (REMOTE)')
+g.dashboard.new('Watsonx Kserve LLM load tests')
++ g.dashboard.withDescription('Load test results for Kserve LLM (remote OS instance)')
 + g.dashboard.withRefresh('1m')
 // This just stopped to work...
 // + g.dashboard.withStyle(value="dark")
