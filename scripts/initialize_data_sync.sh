@@ -82,6 +82,28 @@ init_syncdata(){
     echo "$python_output"
 }
 
+create_grafana_readonly_user(){
+    sleep 5
+
+    while :
+    do
+        response=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3000/login)
+        if [ "$response" == "200" ]; then
+            curl -XPOST -H "Content-Type: application/json" -d '{
+            "name":"readonly",
+            "email":"readonly@example.com",
+            "login":"readonly",
+            "password":"readonly"
+            }' http://administrator:1234@127.0.0.1:3000/api/admin/users
+            break
+        else
+            sleep 5
+        fi
+    done
+
+    echo "initialize_data_sync.sh: Created readonly user"
+}
+
 run_once(){
     temp_file='/tmp/initialize_data_sync.txt'
     echo "initialize_data_sync.sh: Temp file $temp_file"
@@ -91,16 +113,9 @@ run_once(){
         return
     fi
 
+    create_grafana_readonly_user
     init_influxdb
     init_syncdata
-
-    sleep 5
-    curl -XPOST -H "Content-Type: application/json" -d '{
-    "name":"readonly",
-    "email":"readonly@example.com",
-    "login":"readonly",
-    "password":"readonly"
-    }' http://administrator:1234@localhost:3000/api/admin/users
 
     echo "initialize_data_sync.sh: status in $temp_file"
     echo "initialize_data_sync.sh: was executed" > $temp_file

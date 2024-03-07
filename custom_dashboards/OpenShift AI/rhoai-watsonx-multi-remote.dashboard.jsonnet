@@ -612,13 +612,13 @@ local bchart ={
     //overrides = myOverrides.AxisAndModel().overrides
   ),
   kserve_llm_load_test_model_load_duration_m:: panelo.barChart(
-    title='Kserve LLM load test duration',
+    title='Kserve LLM model load duration',
     targets=[
       opensearch_queries.get_kserve_llm_load_test_model_load_duration(),
     ],
     min=0,
     axisLabel='Time',
-    unit='ms',
+    unit='s',
     decimals=2,
     stacking='normal',
     legendPlacement='bottom',
@@ -683,13 +683,13 @@ local bchart ={
     overrides = myOverrides.AxisAndModel().overrides
   ),
   kserve_llm_load_test_model_load_duration:: panelo.barChart(
-    title='Kserve LLM load test duration',
+    title='Kserve LLM model load duration',
     targets=[
       opensearch_queries.get_kserve_llm_load_test_model_load_duration(),
     ],
     min=0,
     axisLabel='Time',
-    unit='ms',
+    unit='s',
     decimals=2,
     legendPlacement='bottom',
     fillOpacity=60,
