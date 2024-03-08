@@ -59,6 +59,23 @@ local accelerator_nameVar =
 // Begin dashboard queries
 //
 local opensearch_queries = {
+
+
+    get_kserve_llm_load_test_failures()::
+        g.panel.timeSeries.queryOptions.withDatasource('opensearch', 'opensearch-remote')
+        + {
+          query: '_index:psap-rhoai.watsonx-kserve-single-light__kserve_llm_load_test_failures AND model_name:[[model_name]] AND virtual_users:[[virtual_users]] AND rhoai_version:[[rhoai_version]] AND ocp_version:[[ocp_version]] AND accelerator_name:[[accelerator_name]]',
+          alias: 'get_kserve_llm_load_test_failures',
+          queryType: "lucene",
+          metrics: [
+            {
+              type: "raw_data",
+            }
+          ],
+          format: "table",
+          timeField: "@timestamp",
+          luceneQueryType: "Metric",
+        },
     get_kserve_llm_load_test_tpot_min()::
         g.panel.timeSeries.queryOptions.withDatasource('opensearch', 'opensearch-remote')
         + {
@@ -256,6 +273,81 @@ local myTransformations = {
             columnField: "model_name",
             rowField: "model_name",
             valueField: "value",
+            emptyValue: "null"
+          }
+        },
+      ]
+    },
+  groupByRhoai()::
+    {
+      transformations: [
+        {
+          id: "sortBy",
+          options: {
+            fields: {},
+            sort: [
+              {
+                field: "model_name"
+              }
+            ]
+          }
+        },
+        {
+          id: "groupingToMatrix",
+          options: {
+            columnField: "rhoai_version",
+            rowField: "model_name",
+            valueField: "value",
+            emptyValue: "null"
+          }
+        },
+      ]
+    },
+  groupByModelAndRhoai()::
+    {
+      transformations: [
+        {
+          id: "sortBy",
+          options: {
+            fields: {},
+            sort: [
+              {
+                field: "model_name"
+              }
+            ]
+          }
+        },
+        {
+          id: "groupBy",
+          options: {
+            fields: {
+              value: {
+                aggregations: [
+                  "mean"
+                ],
+                operation: "aggregate"
+              },
+              accelerator_name: {
+                aggregations: [],
+                operation: null
+              },
+              model_name: {
+                aggregations: [],
+                operation: "groupby"
+              },
+              rhoai_version: {
+                aggregations: [],
+                operation: "groupby"
+              }
+            }
+          }
+        },
+        {
+          id: "groupingToMatrix",
+          options: {
+            columnField: "rhoai_version",
+            rowField: "model_name",
+            valueField: "value (mean)",
             emptyValue: "null"
           }
         },
@@ -573,6 +665,101 @@ local timese ={
 };
 
 local bchart ={
+
+
+  kserve_llm_load_test_tpot_rhoai:: panelo.barChart(
+    title='Kserve LLM load test TPOT (min)',
+    targets=[
+      opensearch_queries.get_kserve_llm_load_test_tpot_min(),
+    ],
+    min=0,
+    axisLabel='Time',
+    unit='ms',
+    decimals=2,
+    legendPlacement='bottom',
+    withXTickLabelMaxLength=8,
+    withXTickLabelRotation=-45,
+    fillOpacity=60,
+    gradientMode=null,
+    legendMode='list',
+    transformations = myTransformations.groupByRhoai(),
+    //overrides = myOverrides.AxisAndModel().overrides
+  ),
+  kserve_llm_load_test_ttft_rhoai:: panelo.barChart(
+    title='Kserve LLM load test TTFT (min)',
+    targets=[
+      opensearch_queries.get_kserve_llm_load_test_ttft_min(),
+    ],
+    min=0,
+    axisLabel='Time',
+    unit='ms',
+    decimals=2,
+    legendPlacement='bottom',
+    withXTickLabelMaxLength=8,
+    withXTickLabelRotation=-45,
+    fillOpacity=60,
+    gradientMode=null,
+    legendMode='list',
+    transformations = myTransformations.groupByRhoai(),
+    //overrides = myOverrides.AxisAndModel().overrides
+  ),
+  kserve_llm_load_test_model_load_duration_rhoai:: panelo.barChart(
+    title='Kserve LLM model load duration',
+    targets=[
+      opensearch_queries.get_kserve_llm_load_test_model_load_duration(),
+    ],
+    min=0,
+    axisLabel='Time',
+    unit='s',
+    decimals=2,
+    legendPlacement='bottom',
+    withXTickLabelMaxLength=8,
+    withXTickLabelRotation=-45,
+    fillOpacity=60,
+    gradientMode=null,
+    legendMode='list',
+    transformations = myTransformations.groupByRhoai(),
+    //overrides = myOverrides.AxisAndModel().overrides
+  ),
+  kserve_llm_load_test_throughput_rhoai:: panelo.barChart(
+    title='Kserve LLM load test throughput',
+    description='Output Tokens per Second; Higher is better',
+    targets=[
+      opensearch_queries.get_kserve_llm_load_test_throughput(),
+    ],
+    min=0,
+    axisLabel='Throughput',
+    unit='',
+    decimals=0,
+    legendPlacement='bottom',
+    withXTickLabelMaxLength=8,
+    withXTickLabelRotation=-45,
+    fillOpacity=60,
+    gradientMode=null,
+    legendMode='list',
+    transformations = myTransformations.groupByRhoai(),
+    //overrides = myOverrides.AxisAndModel().overrides
+  ),
+  kserve_llm_load_test_failures_rhoai:: panelo.barChart(
+    title='Kserve LLM load test failures (mean)',
+    description='Failures',
+    targets=[
+      opensearch_queries.get_kserve_llm_load_test_failures(),
+    ],
+    min=0,
+    axisLabel='Errors',
+    unit='',
+    decimals=0,
+    legendPlacement='bottom',
+    withXTickLabelMaxLength=8,
+    withXTickLabelRotation=-45,
+    fillOpacity=60,
+    gradientMode=null,
+    legendMode='list',
+    transformations = myTransformations.groupByModelAndRhoai(),
+    //overrides = myOverrides.AxisAndModel().overrides
+  ),
+
   kserve_llm_load_test_tpot_m:: panelo.barChart(
     title='Kserve LLM load test TPOT (min)',
     targets=[
@@ -650,6 +837,7 @@ local bchart ={
     transformations = myTransformations.groupByModelAndSort(),
     //overrides = myOverrides.AxisAndModel().overrides
   ),
+
   kserve_llm_load_test_tpot:: panelo.barChart(
     title='Kserve LLM load test TPOT (min)',
     targets=[
@@ -736,6 +924,7 @@ local y = g.panel.barChart.gridPos.withY;
 g.dashboard.new('Watsonx Kserve LLM load tests')
 + g.dashboard.withDescription('Load test results for Kserve LLM (remote OS instance)')
 + g.dashboard.withRefresh('1m')
++ g.dashboard.withUid('watsonx-rhoai-kserve-dashboard')
 // This just stopped to work...
 // + g.dashboard.withStyle(value="dark")
 + g.dashboard.withTimezone(value="browser")
@@ -765,8 +954,14 @@ g.dashboard.new('Watsonx Kserve LLM load tests')
   myPanels.barChart.kserve_llm_load_test_ttft + x(12) + y(13)  + w(12) + h(14),
   myPanels.barChart.kserve_llm_load_test_model_load_duration + x(0) + y(27)  + w(12) + h(14),
   myPanels.barChart.kserve_llm_load_test_throughput + x(12) + y(27)  + w(12) + h(14),
-  g.panel.row.new("LLM Load tests over time") + x(0) + y(28),
-  myPanels.timeSeries.kserve_llm_load_test_throughput + x(0) + y(29)  + w(24) + h(14),
+  g.panel.row.new("LLM Load tests by OpenShift AI version") + x(0) + y(28),
+  myPanels.barChart.kserve_llm_load_test_tpot_rhoai + x(0) + y(29)  + w(12) + h(14),
+  myPanels.barChart.kserve_llm_load_test_ttft_rhoai + x(12) + y(29)  + w(12) + h(14),
+  myPanels.barChart.kserve_llm_load_test_model_load_duration_rhoai + x(0) + y(43)  + w(12) + h(14),
+  myPanels.barChart.kserve_llm_load_test_throughput_rhoai + x(12) + y(43)  + w(12) + h(14),
+  myPanels.barChart.kserve_llm_load_test_failures_rhoai + x(0) + y(44)  + w(24) + h(14),
+  g.panel.row.new("LLM Load tests over time") + x(0) + y(58),
+  myPanels.timeSeries.kserve_llm_load_test_throughput + x(0) + y(59)  + w(24) + h(14),
 ])
 
 //
