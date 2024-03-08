@@ -355,7 +355,6 @@ local myTransformations = {
     },
 };
 
-
 local myOverrides = {
   AxisAndModel()::
     {
@@ -387,10 +386,6 @@ local myOverrides = {
     ]
     },
 };
-
-
-
-
 
 //
 // End define transformations
@@ -665,8 +660,6 @@ local timese ={
 };
 
 local bchart ={
-
-
   kserve_llm_load_test_tpot_rhoai:: panelo.barChart(
     title='Kserve LLM load test TPOT (min)',
     targets=[
@@ -677,11 +670,11 @@ local bchart ={
     unit='ms',
     decimals=2,
     legendPlacement='bottom',
-    withXTickLabelMaxLength=8,
+    withXTickLabelMaxLength=20,
     withXTickLabelRotation=-45,
     fillOpacity=60,
     gradientMode=null,
-    legendMode='list',
+    legendCalcs=['max', 'min', 'mean', 'variance'],
     transformations = myTransformations.groupByRhoai(),
     //overrides = myOverrides.AxisAndModel().overrides
   ),
@@ -695,11 +688,11 @@ local bchart ={
     unit='ms',
     decimals=2,
     legendPlacement='bottom',
-    withXTickLabelMaxLength=8,
+    withXTickLabelMaxLength=20,
     withXTickLabelRotation=-45,
     fillOpacity=60,
     gradientMode=null,
-    legendMode='list',
+    legendCalcs=['max', 'min', 'mean', 'variance'],
     transformations = myTransformations.groupByRhoai(),
     //overrides = myOverrides.AxisAndModel().overrides
   ),
@@ -713,11 +706,11 @@ local bchart ={
     unit='s',
     decimals=2,
     legendPlacement='bottom',
-    withXTickLabelMaxLength=8,
+    withXTickLabelMaxLength=20,
     withXTickLabelRotation=-45,
     fillOpacity=60,
     gradientMode=null,
-    legendMode='list',
+    legendCalcs=['max', 'min', 'mean', 'variance'],
     transformations = myTransformations.groupByRhoai(),
     //overrides = myOverrides.AxisAndModel().overrides
   ),
@@ -732,11 +725,11 @@ local bchart ={
     unit='',
     decimals=0,
     legendPlacement='bottom',
-    withXTickLabelMaxLength=8,
+    withXTickLabelMaxLength=20,
     withXTickLabelRotation=-45,
     fillOpacity=60,
     gradientMode=null,
-    legendMode='list',
+    legendCalcs=['max', 'min', 'mean', 'variance'],
     transformations = myTransformations.groupByRhoai(),
     //overrides = myOverrides.AxisAndModel().overrides
   ),
@@ -751,11 +744,10 @@ local bchart ={
     unit='',
     decimals=0,
     legendPlacement='bottom',
-    withXTickLabelMaxLength=8,
+    withXTickLabelMaxLength=20,
     withXTickLabelRotation=-45,
     fillOpacity=60,
     gradientMode=null,
-    legendMode='list',
     transformations = myTransformations.groupByModelAndRhoai(),
     //overrides = myOverrides.AxisAndModel().overrides
   ),
