@@ -9,6 +9,7 @@ local var = g.dashboard.variable;
 
 local model_nameVar =
   var.query.new('model_name', '{"find": "terms",  "field": "model_name.keyword"}')
+  + var.query.withRegex('.+')
   + var.query.withDatasource(
     type='opensearch',
     uid='opensearch-remote',
@@ -18,6 +19,7 @@ local model_nameVar =
 
 local virtual_usersVar =
   var.query.new('virtual_users', '{"find": "terms", "field": "virtual_users", "query": "*"}')
+  + var.query.withRegex('.+')
   + var.query.withDatasource(
     type='opensearch',
     uid='opensearch-remote',
@@ -27,6 +29,7 @@ local virtual_usersVar =
 
 local rhoai_versionVar =
   var.query.new('rhoai_version', '{"find": "terms",  "field": "rhoai_version.keyword"}')
+  + var.query.withRegex('.+')
   + var.query.withDatasource(
     type='opensearch',
     uid='opensearch-remote',
@@ -36,6 +39,7 @@ local rhoai_versionVar =
 
 local ocp_versionVar =
   var.query.new('ocp_version', '{"find": "terms",  "field": "ocp_version.keyword"}')
+  + var.query.withRegex('.+')
   + var.query.withDatasource(
     type='opensearch',
     uid='opensearch-remote',
@@ -45,6 +49,7 @@ local ocp_versionVar =
 
 local accelerator_nameVar =
   var.query.new('accelerator_name', '{"find": "terms",  "field": "accelerator_name.keyword"}')
+  + var.query.withRegex('.+')
   + var.query.withDatasource(
     type='opensearch',
     uid='opensearch-remote',
