@@ -258,6 +258,50 @@ local myTransformations = {
         },
       ]
     },
+  groupByModelAndConcurrency()::
+    {
+      transformations: [
+        {
+          id: "sortBy",
+          options: {
+            fields: {},
+            sort: [
+              {
+                field: "virtual_users"
+              }
+            ]
+          }
+        },
+        {
+          id: "convertFieldType",
+          options: {
+            fields: {},
+            conversions: [
+              {
+                targetField: "virtual_users",
+                destinationType: "string"
+              }
+            ]
+          }
+        },
+        {
+          id: "groupingToMatrix",
+          options: {
+            columnField: "virtual_users",
+            rowField: "model_name",
+            valueField: "value",
+            emptyValue: "null"
+          }
+        },
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "(.*)",
+            "renamePattern": "$1 virtual users"
+          }
+        }
+      ]
+    },
   groupByModelAndSort()::
     {
       transformations: [
@@ -816,7 +860,6 @@ local bchart ={
   ),
   kserve_llm_load_test_throughput_m:: panelo.barChart(
     title='Kserve LLM load test throughput',
-    description='Output Tokens per Second; Higher is better',
     targets=[
       opensearch_queries.get_kserve_llm_load_test_throughput(),
     ],
@@ -824,14 +867,13 @@ local bchart ={
     axisLabel='Throughput',
     unit='',
     decimals=0,
-    stacking='normal',
-    legendPlacement='bottom',
-    withXTickLabelMaxLength=8,
+    withXTickLabelMaxLength=15,
     withXTickLabelRotation=-45,
+    legendPlacement='bottom',
     fillOpacity=60,
     gradientMode=null,
-    legendMode='list',
-    transformations = myTransformations.groupByModelAndSort(),
+    legendCalcs=['max', 'min', 'mean', 'variance'],
+    transformations = myTransformations.groupByModelAndConcurrency(),
     //overrides = myOverrides.AxisAndModel().overrides
   ),
 
@@ -945,20 +987,20 @@ g.dashboard.new('Watsonx Kserve LLM load tests')
   myPanels.barChart.kserve_llm_load_test_tpot_m + x(0) + y(1) + w(8) + h(11),
   myPanels.barChart.kserve_llm_load_test_ttft_m + x(8) + y(1) + w(8) + h(11),
   myPanels.barChart.kserve_llm_load_test_model_load_duration_m + x(16) + y(1) + w(8) + h(11),
-  //myPanels.barChart.kserve_llm_load_test_throughput_m + x(18) + y(1) + w(6) + h(11),
-  g.panel.row.new("LLM Load tests by virtual_users") + x(0) + y(12),
-  myPanels.barChart.kserve_llm_load_test_tpot + x(0) + y(13)  + w(24) + h(14),
-  myPanels.barChart.kserve_llm_load_test_ttft + x(0) + y(27)  + w(24) + h(14),
+  myPanels.barChart.kserve_llm_load_test_throughput_m + x(0) + y(12) + w(24) + h(11),
+  g.panel.row.new("LLM Load tests by virtual_users") + x(0) + y(13),
+  myPanels.barChart.kserve_llm_load_test_tpot + x(0) + y(27)  + w(24) + h(14),
+  myPanels.barChart.kserve_llm_load_test_ttft + x(0) + y(41)  + w(24) + h(14),
   // myPanels.barChart.kserve_llm_load_test_model_load_duration + x(0) + y(27)  + w(12) + h(14),
-  myPanels.barChart.kserve_llm_load_test_throughput + x(0) + y(41)  + w(24) + h(14),
-  g.panel.row.new("LLM Load tests by OpenShift AI version") + x(0) + y(42),
-  myPanels.barChart.kserve_llm_load_test_tpot_rhoai + x(0) + y(43)  + w(12) + h(14),
-  myPanels.barChart.kserve_llm_load_test_ttft_rhoai + x(12) + y(43)  + w(12) + h(14),
-  myPanels.barChart.kserve_llm_load_test_model_load_duration_rhoai + x(0) + y(57)  + w(12) + h(14),
-  myPanels.barChart.kserve_llm_load_test_throughput_rhoai + x(12) + y(57)  + w(12) + h(14),
-  myPanels.barChart.kserve_llm_load_test_failures_rhoai + x(0) + y(71)  + w(24) + h(14),
-  g.panel.row.new("LLM Load tests over time") + x(0) + y(72),
-  myPanels.timeSeries.kserve_llm_load_test_throughput + x(0) + y(73)  + w(24) + h(14),
+  myPanels.barChart.kserve_llm_load_test_throughput + x(0) + y(55)  + w(69) + h(14),
+  g.panel.row.new("LLM Load tests by OpenShift AI version") + x(0) + y(83),
+  myPanels.barChart.kserve_llm_load_test_tpot_rhoai + x(0) + y(84)  + w(12) + h(14),
+  myPanels.barChart.kserve_llm_load_test_ttft_rhoai + x(12) + y(84)  + w(12) + h(14),
+  myPanels.barChart.kserve_llm_load_test_model_load_duration_rhoai + x(0) + y(98)  + w(12) + h(14),
+  myPanels.barChart.kserve_llm_load_test_throughput_rhoai + x(12) + y(98)  + w(12) + h(14),
+  myPanels.barChart.kserve_llm_load_test_failures_rhoai + x(0) + y(112)  + w(24) + h(14),
+  g.panel.row.new("LLM Load tests over time") + x(0) + y(126),
+  myPanels.timeSeries.kserve_llm_load_test_throughput + x(0) + y(127)  + w(24) + h(14),
 ])
 
 //
