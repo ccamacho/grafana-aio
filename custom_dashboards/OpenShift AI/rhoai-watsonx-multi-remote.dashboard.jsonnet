@@ -56,6 +56,16 @@ local accelerator_nameVar =
   )
   + var.query.selectionOptions.withIncludeAll()
   + var.custom.selectionOptions.withMulti();
+
+local run_idVar =
+  var.query.new('run_id', '{"find": "terms",  "field": "run_id.keyword", "query": "psap-rhoai.rhoai-kserve-single.*"}')
+  + var.query.withRegex('.+')
+  + var.query.withDatasource(
+    type='opensearch',
+    uid='opensearch-remote',
+  )
+  + var.query.selectionOptions.withIncludeAll()
+  + var.custom.selectionOptions.withMulti();
 //
 // End dashboard variables
 //
@@ -69,7 +79,7 @@ local opensearch_queries = {
     get_kserve_llm_load_test_failures()::
         g.panel.timeSeries.queryOptions.withDatasource('opensearch', 'opensearch-remote')
         + {
-          query: '_index:psap-rhoai.rhoai-kserve-single.kserve_llm_load_test_failures AND model_name:[[model_name]] AND virtual_users:[[virtual_users]] AND rhoai_version:[[rhoai_version]] AND ocp_version:[[ocp_version]] AND accelerator_name:[[accelerator_name]]',
+          query: '_index:psap-rhoai.rhoai-kserve-single.kserve_llm_load_test_failures AND model_name:[[model_name]] AND virtual_users:[[virtual_users]] AND rhoai_version:[[rhoai_version]] AND ocp_version:[[ocp_version]] AND accelerator_name:[[accelerator_name]] AND run_id:[[run_id]]',
           alias: 'get_kserve_llm_load_test_failures',
           queryType: "lucene",
           metrics: [
@@ -84,7 +94,7 @@ local opensearch_queries = {
     get_kserve_llm_load_test_tpot_min()::
         g.panel.timeSeries.queryOptions.withDatasource('opensearch', 'opensearch-remote')
         + {
-          query: '_index:psap-rhoai.rhoai-kserve-single.kserve_llm_load_test_tpot_min AND model_name:[[model_name]] AND virtual_users:[[virtual_users]] AND rhoai_version:[[rhoai_version]] AND ocp_version:[[ocp_version]] AND accelerator_name:[[accelerator_name]]',
+          query: '_index:psap-rhoai.rhoai-kserve-single.kserve_llm_load_test_tpot_min AND model_name:[[model_name]] AND virtual_users:[[virtual_users]] AND rhoai_version:[[rhoai_version]] AND ocp_version:[[ocp_version]] AND accelerator_name:[[accelerator_name]] AND run_id:[[run_id]]',
           alias: 'get_kserve_llm_load_test_tpot_min',
           queryType: "lucene",
           metrics: [
@@ -99,7 +109,7 @@ local opensearch_queries = {
     get_kserve_llm_load_test_ttft_min()::
         g.panel.timeSeries.queryOptions.withDatasource('opensearch', 'opensearch-remote')
         + {
-          query: '_index:psap-rhoai.rhoai-kserve-single.kserve_llm_load_test_ttft_min AND model_name:[[model_name]] AND virtual_users:[[virtual_users]] AND rhoai_version:[[rhoai_version]] AND ocp_version:[[ocp_version]] AND accelerator_name:[[accelerator_name]]',
+          query: '_index:psap-rhoai.rhoai-kserve-single.kserve_llm_load_test_ttft_min AND model_name:[[model_name]] AND virtual_users:[[virtual_users]] AND rhoai_version:[[rhoai_version]] AND ocp_version:[[ocp_version]] AND accelerator_name:[[accelerator_name]] AND run_id:[[run_id]]',
           alias: 'get_kserve_llm_load_test_ttft_min',
           queryType: "lucene",
           metrics: [
@@ -114,7 +124,7 @@ local opensearch_queries = {
     get_kserve_llm_load_test_model_load_duration()::
         g.panel.timeSeries.queryOptions.withDatasource('opensearch', 'opensearch-remote')
         + {
-          query: '_index:psap-rhoai.rhoai-kserve-single.kserve_llm_load_test_model_load_duration AND model_name:[[model_name]] AND virtual_users:[[virtual_users]] AND rhoai_version:[[rhoai_version]] AND ocp_version:[[ocp_version]] AND accelerator_name:[[accelerator_name]]',
+          query: '_index:psap-rhoai.rhoai-kserve-single.kserve_llm_load_test_model_load_duration AND model_name:[[model_name]] AND virtual_users:[[virtual_users]] AND rhoai_version:[[rhoai_version]] AND ocp_version:[[ocp_version]] AND accelerator_name:[[accelerator_name]] AND run_id:[[run_id]]',
           alias: 'get_kserve_llm_load_test_model_load_duration',
           queryType: "lucene",
           metrics: [
@@ -129,7 +139,7 @@ local opensearch_queries = {
     get_kserve_llm_load_test_throughput()::
         g.panel.timeSeries.queryOptions.withDatasource('opensearch', 'opensearch-remote')
         + {
-          query: '_index:psap-rhoai.rhoai-kserve-single.kserve_llm_load_test_throughput AND model_name:[[model_name]] AND virtual_users:[[virtual_users]] AND rhoai_version:[[rhoai_version]] AND ocp_version:[[ocp_version]] AND accelerator_name:[[accelerator_name]]',
+          query: '_index:psap-rhoai.rhoai-kserve-single.kserve_llm_load_test_throughput AND model_name:[[model_name]] AND virtual_users:[[virtual_users]] AND rhoai_version:[[rhoai_version]] AND ocp_version:[[ocp_version]] AND accelerator_name:[[accelerator_name]] AND run_id:[[run_id]]',
           alias: 'get_kserve_llm_load_test_throughput',
           queryType: "lucene",
           metrics: [
@@ -976,6 +986,7 @@ g.dashboard.new('Watsonx Kserve LLM load tests')
   rhoai_versionVar,
   ocp_versionVar,
   accelerator_nameVar,
+  run_idVar,
 ])
 + g.dashboard.withAnnotations([
   rhods_annotation,
