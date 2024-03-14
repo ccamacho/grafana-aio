@@ -733,7 +733,7 @@ local bchart ={
     withXTickLabelRotation=-45,
     fillOpacity=60,
     gradientMode=null,
-    legendCalcs=['max', 'min', 'mean', 'variance'],
+    legendCalcs=['max', 'min', 'mean', 'variance', 'count'],
     transformations = myTransformations.groupByRhoai(),
     //overrides = myOverrides.AxisAndModel().overrides
   ),
@@ -751,7 +751,7 @@ local bchart ={
     withXTickLabelRotation=-45,
     fillOpacity=60,
     gradientMode=null,
-    legendCalcs=['max', 'min', 'mean', 'variance'],
+    legendCalcs=['max', 'min', 'mean', 'variance', 'count'],
     transformations = myTransformations.groupByRhoai(),
     //overrides = myOverrides.AxisAndModel().overrides
   ),
@@ -769,7 +769,7 @@ local bchart ={
     withXTickLabelRotation=-45,
     fillOpacity=60,
     gradientMode=null,
-    legendCalcs=['max', 'min', 'mean', 'variance'],
+    legendCalcs=['max', 'min', 'mean', 'variance', 'count'],
     transformations = myTransformations.groupByRhoai(),
     //overrides = myOverrides.AxisAndModel().overrides
   ),
@@ -788,7 +788,7 @@ local bchart ={
     withXTickLabelRotation=-45,
     fillOpacity=60,
     gradientMode=null,
-    legendCalcs=['max', 'min', 'mean', 'variance'],
+    legendCalcs=['max', 'min', 'mean', 'variance', 'count'],
     transformations = myTransformations.groupByRhoai(),
     //overrides = myOverrides.AxisAndModel().overrides
   ),
@@ -882,7 +882,7 @@ local bchart ={
     legendPlacement='bottom',
     fillOpacity=60,
     gradientMode=null,
-    legendCalcs=['max', 'min', 'mean', 'variance'],
+    legendCalcs=['max', 'min', 'mean', 'variance', 'count'],
     transformations = myTransformations.groupByModelAndConcurrency(),
     //overrides = myOverrides.AxisAndModel().overrides
   ),
@@ -899,7 +899,7 @@ local bchart ={
     legendPlacement='bottom',
     fillOpacity=60,
     gradientMode=null,
-    legendCalcs=['max', 'min', 'mean', 'variance'],
+    legendCalcs=['max', 'min', 'mean', 'variance', 'count'],
     transformations = myTransformations.groupByConcurrencyAndSort(),
     overrides = myOverrides.AxisAndModel().overrides
   ),
@@ -915,7 +915,7 @@ local bchart ={
     legendPlacement='bottom',
     fillOpacity=60,
     gradientMode=null,
-    legendCalcs=['max', 'min', 'mean', 'variance'],
+    legendCalcs=['max', 'min', 'mean', 'variance', 'count'],
     transformations = myTransformations.groupByConcurrencyAndSort(),
     overrides = myOverrides.AxisAndModel().overrides
   ),
@@ -931,7 +931,7 @@ local bchart ={
     legendPlacement='bottom',
     fillOpacity=60,
     gradientMode=null,
-    legendCalcs=['max', 'min', 'mean', 'variance'],
+    legendCalcs=['max', 'min', 'mean', 'variance', 'count'],
     transformations = myTransformations.groupByConcurrencyAndSort(),
     overrides = myOverrides.AxisAndModel().overrides
   ),
@@ -947,7 +947,7 @@ local bchart ={
     legendPlacement='bottom',
     fillOpacity=60,
     gradientMode=null,
-    legendCalcs=['max', 'min', 'mean', 'variance'],
+    legendCalcs=['max', 'min', 'mean', 'variance', 'count'],
     transformations = myTransformations.groupByConcurrencyAndSort(),
     overrides = myOverrides.AxisAndModel().overrides
   ),
