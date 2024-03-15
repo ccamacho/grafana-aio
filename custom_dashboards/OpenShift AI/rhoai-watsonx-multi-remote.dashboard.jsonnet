@@ -978,7 +978,7 @@ g.dashboard.new('Watsonx Kserve LLM load tests')
 // This just stopped to work...
 // + g.dashboard.withStyle(value="dark")
 + g.dashboard.withTimezone(value="browser")
-+ g.dashboard.time.withFrom(value="now-6h")
++ g.dashboard.time.withFrom(value="now-6M")
 + g.dashboard.time.withTo(value="now")
 + g.dashboard.graphTooltip.withSharedCrosshair()
 + g.dashboard.withVariables([
