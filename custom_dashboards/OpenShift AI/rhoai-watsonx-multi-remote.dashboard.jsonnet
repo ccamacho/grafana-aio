@@ -807,6 +807,7 @@ local bchart ={
     withXTickLabelRotation=-45,
     fillOpacity=60,
     gradientMode=null,
+    legendCalcs=['max', 'min', 'mean', 'variance', 'count'],
     transformations = myTransformations.groupByModelAndRhoai(),
     //overrides = myOverrides.AxisAndModel().overrides
   ),
@@ -826,7 +827,7 @@ local bchart ={
     withXTickLabelRotation=-45,
     fillOpacity=60,
     gradientMode=null,
-    legendMode='list',
+    legendCalcs=['max', 'min', 'mean', 'count'],
     transformations = myTransformations.groupByModelAndSort(),
     //overrides = myOverrides.AxisAndModel().overrides
   ),
@@ -845,7 +846,7 @@ local bchart ={
     withXTickLabelRotation=-45,
     fillOpacity=60,
     gradientMode=null,
-    legendMode='list',
+    legendCalcs=['max', 'min', 'mean', 'count'],
     transformations = myTransformations.groupByModelAndSort(),
     //overrides = myOverrides.AxisAndModel().overrides
   ),
@@ -864,7 +865,7 @@ local bchart ={
     withXTickLabelRotation=-45,
     fillOpacity=60,
     gradientMode=null,
-    legendMode='list',
+    legendCalcs=['max', 'min', 'mean', 'count'],
     transformations = myTransformations.groupByModelAndSort(),
     //overrides = myOverrides.AxisAndModel().overrides
   ),
