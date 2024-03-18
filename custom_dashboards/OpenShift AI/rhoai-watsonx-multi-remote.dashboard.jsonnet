@@ -571,7 +571,7 @@ local plotly_boxplot = {
                 y: measures,
                 type: 'box',
                 fill: 'toself',
-                fillcolor: applyOpacityToColor(colorR),
+                fillcolor: applyOpacityToColor(colorR, 0.2),
                 boxpoints: 'all',
                 text: "asdf",
               };
