@@ -91,6 +91,21 @@ local opensearch_queries = {
           timeField: "@timestamp",
           luceneQueryType: "Metric",
         },
+    get_kserve_llm_load_test_tpot()::
+        g.panel.timeSeries.queryOptions.withDatasource('opensearch', 'opensearch-remote')
+        + {
+          query: '_index:psap-rhoai.rhoai-kserve-single.kserve_llm_load_test_tpot AND model_name:[[model_name]] AND virtual_users:[[virtual_users]] AND rhoai_version:[[rhoai_version]] AND ocp_version:[[ocp_version]] AND accelerator_name:[[accelerator_name]] AND run_id:[[run_id]]',
+          alias: 'get_kserve_llm_load_test_tpot',
+          queryType: "lucene",
+          metrics: [
+            {
+              type: "raw_data",
+            }
+          ],
+          format: "table",
+          timeField: "@timestamp",
+          luceneQueryType: "Metric",
+        },
     get_kserve_llm_load_test_tpot_min()::
         g.panel.timeSeries.queryOptions.withDatasource('opensearch', 'opensearch-remote')
         + {
@@ -312,7 +327,7 @@ local myTransformations = {
         }
       ]
     },
-  groupByModelAndSort()::
+  groupByModelModelAndSort()::
     {
       transformations: [
         {
@@ -331,6 +346,42 @@ local myTransformations = {
           options: {
             columnField: "model_name",
             rowField: "model_name",
+            valueField: "value",
+            emptyValue: "null"
+          }
+        },
+      ]
+    },
+  groupByModelRhoai_AndSort()::
+    {
+      transformations: [
+        {
+          id: "sortBy",
+          options: {
+            fields: {},
+            sort: [
+              {
+                field: "rhoai_version"
+              }
+            ]
+          }
+        },
+        {
+          id: "sortBy",
+          options: {
+            fields: {},
+            sort: [
+              {
+                field: "model_name"
+              }
+            ]
+          }
+        },
+        {
+          id: "groupingToMatrix",
+          options: {
+            columnField: "model_name",
+            rowField: "rhoai_version",
             valueField: "value",
             emptyValue: "null"
           }
@@ -454,17 +505,18 @@ local myOverrides = {
 // Begin Plotly boxplot
 //
 local plotly_boxplot = {
-  get_labelsEvolution()::
+  get_tpot_distribution()::
     {
-      "title": "Performance distribution between the fastest benchmark runs",
+      "title": "Time Per Output Token distribution (make sure to filter by rhoai_version or run_id)",
+      "description": "make sure to filter by rhoai_version or run_id",
       "type": "nline-plotlyjs-panel",
       "datasource": {
         "type": "opensearch",
         "uid": "opensearch-remote"
       },
-      "transformations": myTransformations.groupByImage().transformations,
+      "transformations": myTransformations.groupByModelRhoai_AndSort().transformations,
       "targets": [
-        opensearch_queries.getPythonNotebooksMin()
+        opensearch_queries.get_kserve_llm_load_test_tpot()
       ],
       "options": {
         "allData": {},
@@ -499,22 +551,33 @@ local plotly_boxplot = {
         "script": |||
           var dataTraces = [];
           for (var i = 1; i < data.series[0].fields.length; i++) {
-            var colorR = getRandomColor()
-            var fills = data.series[0].fields[i].name
-            var trace = {
-              name: data.series[0].fields[i].name,
-              line: {
-                color: colorR,
-                width: 1
-              },
-              y: data.series[0].fields[i].values,
-              type: 'box',
-              fill: 'toself',
-              fillcolor: applyOpacityToColor(colorR),
-              boxpoints: 'all',
-              text: "asdf",
-            };
-            dataTraces.push(trace);
+            var model_name = data.series[0].fields[i].name;
+            var field_values = data.series[0].fields[i].values;
+            for (var j = 0; j < field_values.length; j++) {
+              var rhoai_version = data.series[0].fields[0].values[j];
+              var measures = field_values[j];
+
+              console.log("Rhoai version:"+rhoai_version);
+              console.log("Model name"+model_name);
+              console.log("Values:"+measures);
+
+              var colorR = getRandomColor();
+              var trace = {
+                name: rhoai_version+"."+model_name,
+                line: {
+                  color: colorR,
+                  width: 1
+                },
+                y: measures,
+                type: 'box',
+                fill: 'toself',
+                fillcolor: applyOpacityToColor(colorR),
+                boxpoints: 'all',
+                text: "asdf",
+              };
+              dataTraces.push(trace);
+
+            }
           }
           function getRandomColor() {
             var color = [
@@ -645,6 +708,7 @@ local panelo = {
         withXTickLabelMaxLength=null,
         withXTickLabelRotation=0,
         withXTickLabelSpacing=0,
+        withShowValue='always',
         thresholdMode=null,
         thresholdSteps=[],
         transformations={},
@@ -659,6 +723,7 @@ local panelo = {
         + g.panel.barChart.standardOptions.withMax(max)
         + g.panel.barChart.standardOptions.withDecimals(decimals)
         + (if stacking != null then g.panel.barChart.options.withStacking(stacking) else {})        
+        + g.panel.barChart.options.withShowValue(withShowValue)
         + g.panel.barChart.options.withXTickLabelMaxLength(withXTickLabelMaxLength)
         + g.panel.barChart.options.withXTickLabelRotation(withXTickLabelRotation)
         + g.panel.barChart.options.withXTickLabelSpacing(withXTickLabelSpacing)
@@ -733,7 +798,7 @@ local bchart ={
     withXTickLabelRotation=-45,
     fillOpacity=60,
     gradientMode=null,
-    legendCalcs=['max', 'min', 'mean', 'variance', 'count'],
+    legendCalcs=['max', 'min', 'count'],
     transformations = myTransformations.groupByRhoai(),
     //overrides = myOverrides.AxisAndModel().overrides
   ),
@@ -751,7 +816,7 @@ local bchart ={
     withXTickLabelRotation=-45,
     fillOpacity=60,
     gradientMode=null,
-    legendCalcs=['max', 'min', 'mean', 'variance', 'count'],
+    legendCalcs=['max', 'min', 'count'],
     transformations = myTransformations.groupByRhoai(),
     //overrides = myOverrides.AxisAndModel().overrides
   ),
@@ -769,7 +834,7 @@ local bchart ={
     withXTickLabelRotation=-45,
     fillOpacity=60,
     gradientMode=null,
-    legendCalcs=['max', 'min', 'mean', 'variance', 'count'],
+    legendCalcs=['max', 'min', 'count'],
     transformations = myTransformations.groupByRhoai(),
     //overrides = myOverrides.AxisAndModel().overrides
   ),
@@ -788,7 +853,7 @@ local bchart ={
     withXTickLabelRotation=-45,
     fillOpacity=60,
     gradientMode=null,
-    legendCalcs=['max', 'min', 'mean', 'variance', 'count'],
+    legendCalcs=['max', 'min', 'count'],
     transformations = myTransformations.groupByRhoai(),
     //overrides = myOverrides.AxisAndModel().overrides
   ),
@@ -807,7 +872,7 @@ local bchart ={
     withXTickLabelRotation=-45,
     fillOpacity=60,
     gradientMode=null,
-    legendCalcs=['max', 'min', 'mean', 'variance', 'count'],
+    legendCalcs=['max', 'min', 'count'],
     transformations = myTransformations.groupByModelAndRhoai(),
     //overrides = myOverrides.AxisAndModel().overrides
   ),
@@ -827,8 +892,8 @@ local bchart ={
     withXTickLabelRotation=-45,
     fillOpacity=60,
     gradientMode=null,
-    legendCalcs=['max', 'min', 'mean', 'count'],
-    transformations = myTransformations.groupByModelAndSort(),
+    legendCalcs=['max', 'min', 'count'],
+    transformations = myTransformations.groupByModelModelAndSort(),
     //overrides = myOverrides.AxisAndModel().overrides
   ),
   kserve_llm_load_test_ttft_m:: panelo.barChart(
@@ -846,8 +911,8 @@ local bchart ={
     withXTickLabelRotation=-45,
     fillOpacity=60,
     gradientMode=null,
-    legendCalcs=['max', 'min', 'mean', 'count'],
-    transformations = myTransformations.groupByModelAndSort(),
+    legendCalcs=['max', 'min', 'count'],
+    transformations = myTransformations.groupByModelModelAndSort(),
     //overrides = myOverrides.AxisAndModel().overrides
   ),
   kserve_llm_load_test_model_load_duration_m:: panelo.barChart(
@@ -865,8 +930,8 @@ local bchart ={
     withXTickLabelRotation=-45,
     fillOpacity=60,
     gradientMode=null,
-    legendCalcs=['max', 'min', 'mean', 'count'],
-    transformations = myTransformations.groupByModelAndSort(),
+    legendCalcs=['max', 'min', 'count'],
+    transformations = myTransformations.groupByModelModelAndSort(),
     //overrides = myOverrides.AxisAndModel().overrides
   ),
   kserve_llm_load_test_throughput_m:: panelo.barChart(
@@ -883,7 +948,7 @@ local bchart ={
     legendPlacement='bottom',
     fillOpacity=60,
     gradientMode=null,
-    legendCalcs=['max', 'min', 'mean', 'variance', 'count'],
+    legendCalcs=['max', 'min', 'count'],
     transformations = myTransformations.groupByModelAndConcurrency(),
     //overrides = myOverrides.AxisAndModel().overrides
   ),
@@ -900,7 +965,7 @@ local bchart ={
     legendPlacement='bottom',
     fillOpacity=60,
     gradientMode=null,
-    legendCalcs=['max', 'min', 'mean', 'variance', 'count'],
+    legendCalcs=['max', 'min', 'count'],
     transformations = myTransformations.groupByConcurrencyAndSort(),
     overrides = myOverrides.AxisAndModel().overrides
   ),
@@ -916,7 +981,7 @@ local bchart ={
     legendPlacement='bottom',
     fillOpacity=60,
     gradientMode=null,
-    legendCalcs=['max', 'min', 'mean', 'variance', 'count'],
+    legendCalcs=['max', 'min', 'count'],
     transformations = myTransformations.groupByConcurrencyAndSort(),
     overrides = myOverrides.AxisAndModel().overrides
   ),
@@ -932,7 +997,7 @@ local bchart ={
     legendPlacement='bottom',
     fillOpacity=60,
     gradientMode=null,
-    legendCalcs=['max', 'min', 'mean', 'variance', 'count'],
+    legendCalcs=['max', 'min', 'count'],
     transformations = myTransformations.groupByConcurrencyAndSort(),
     overrides = myOverrides.AxisAndModel().overrides
   ),
@@ -948,7 +1013,7 @@ local bchart ={
     legendPlacement='bottom',
     fillOpacity=60,
     gradientMode=null,
-    legendCalcs=['max', 'min', 'mean', 'variance', 'count'],
+    legendCalcs=['max', 'min', 'count'],
     transformations = myTransformations.groupByConcurrencyAndSort(),
     overrides = myOverrides.AxisAndModel().overrides
   ),
@@ -1013,6 +1078,9 @@ g.dashboard.new('Watsonx Kserve LLM load tests')
   myPanels.barChart.kserve_llm_load_test_failures_rhoai + x(0) + y(112)  + w(24) + h(14),
   g.panel.row.new("LLM Load tests over time") + x(0) + y(126),
   myPanels.timeSeries.kserve_llm_load_test_throughput + x(0) + y(127)  + w(24) + h(14),
+  g.panel.row.new("LLM Load tests results distribution") + x(0) + y(128),
+  plotly_boxplot.get_tpot_distribution() + x(0) + y(142)  + w(24) + h(14),
+
 ])
 
 //
