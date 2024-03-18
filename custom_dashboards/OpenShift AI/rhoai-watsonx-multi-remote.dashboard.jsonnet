@@ -319,10 +319,10 @@ local myTransformations = {
           }
         },
         {
-          "id": "renameByRegex",
-          "options": {
-            "regex": "(.*)",
-            "renamePattern": "$1 virtual users"
+          id: "renameByRegex",
+          options: {
+            regex: "(.*)",
+            renamePattern: "$1 virtual users"
           }
         }
       ]
