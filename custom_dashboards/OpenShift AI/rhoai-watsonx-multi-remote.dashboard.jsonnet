@@ -550,6 +550,23 @@ local plotly_boxplot = {
         "resScale": 2,
         "script": |||
           var dataTraces = [];
+          // Get a random color
+          function getRandomColor() {
+            var color = [
+              Math.floor(Math.random() * 256),
+              Math.floor(Math.random() * 256),
+              Math.floor(Math.random() * 256)
+            ];
+            return "rgba(" + color.join(",") + ",1)";
+          }
+          // Apply opacity to a color
+          function applyOpacityToColor(color, opacity) {
+            const rgbaValues = color.match(/\d+/g).map(Number);
+            rgbaValues[3] = opacity;
+            return `rgba(${rgbaValues.join(",")})`;
+          }
+
+          // Build the boxplot traces
           for (var i = 1; i < data.series[0].fields.length; i++) {
             var model_name = data.series[0].fields[i].name;
             var field_values = data.series[0].fields[i].values;
@@ -576,22 +593,10 @@ local plotly_boxplot = {
                 text: "asdf",
               };
               dataTraces.push(trace);
-
             }
           }
-          function getRandomColor() {
-            var color = [
-              Math.floor(Math.random() * 256),
-              Math.floor(Math.random() * 256),
-              Math.floor(Math.random() * 256)
-            ];
-            return "rgba(" + color.join(",") + ",1)";
-          }
-          function applyOpacityToColor(color, opacity) {
-            const rgbaValues = color.match(/\d+/g).map(Number);
-            rgbaValues[3] = opacity;
-            return `rgba(${rgbaValues.join(",")})`;
-          }
+
+          // Return the arrays to build the boxplots
           return { data: dataTraces };
         |||,
         "timeCol": "",
