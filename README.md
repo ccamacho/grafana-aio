@@ -64,6 +64,8 @@ cd grafana-aio
 docker build -t grafana-aio .
 
 docker run \
+    -d \
+    --name grafana-aio \
     -p 3000:3000 \
     -p 9090:9090 \
     -p 9200:9200 \
@@ -76,6 +78,8 @@ docker run \
 
 ```bash
 docker run \
+    -d \
+    --name grafana-aio \
     -p 3000:3000 \
     -p 9090:9090 \
     -p 9200:9200 \
