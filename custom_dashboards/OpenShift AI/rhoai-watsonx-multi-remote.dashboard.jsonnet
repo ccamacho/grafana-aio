@@ -74,8 +74,6 @@ local run_idVar =
 // Begin dashboard queries
 //
 local opensearch_queries = {
-
-
     get_kserve_llm_load_test_failures()::
         g.panel.timeSeries.queryOptions.withDatasource('opensearch', 'opensearch-remote')
         + {
@@ -220,6 +218,91 @@ local ocp_annotation =
 // Begin define transformations
 //
 local myTransformations = {
+  groupByTrendData()::
+    {
+      transformations: [
+        {
+          id: "sortBy",
+          options: {
+            fields: {},
+            sort: [
+              {
+                field: "model_name"
+              }
+            ]
+          }
+        },
+        {
+          id: "sortBy",
+          options: {
+            fields: {},
+            sort: [
+              {
+                field: "rhoai_version"
+              }
+            ]
+          }
+        },
+        {
+          id: "calculateField",
+          options: {
+            alias: "",
+            binary: {
+              left: "model_name",
+              operator: "+",
+              right: "rhoai_version"
+            },
+            mode: "binary",
+            reduce: {
+              reducer: "sum"
+            }
+          }
+        },
+        {
+          id: "filterFieldsByName",
+          options: {
+            include: {
+              names: [
+                "value",
+                "virtual_users",
+                "model_name + rhoai_version"
+              ]
+            }
+          }
+        },
+        {
+          id: "groupingToMatrix",
+          options: {
+            columnField: "model_name + rhoai_version",
+            rowField: "virtual_users",
+            valueField: "value"
+          }
+        },
+        {
+          id: "convertFieldType",
+          options: {
+            conversions: [
+              {
+                destinationType: "number",
+                targetField: "virtual_users\\model_name + rhoai_version"
+              }
+            ],
+            fields: {}
+          }
+        },
+        {
+          id: "sortBy",
+          options: {
+            fields: {},
+            sort: [
+              {
+                field: "virtual_users\\model_name + rhoai_version"
+              }
+            ]
+          }
+        }
+      ]
+    },
   groupByModelSortByTimestamp()::
     {
       transformations: [
@@ -495,6 +578,23 @@ local myOverrides = {
       }
     ]
     },
+  VirtualUserTrendAxis()::
+    {
+    overrides: [
+      {
+        matcher: {
+          id: "byName",
+          options: "virtual_users\\model_name + rhoai_version"
+        },
+        properties: [
+          {
+            id: "custom.axisLabel",
+            value: "Virtual users"
+          }
+        ]
+      }
+    ]
+    },
 };
 
 //
@@ -692,6 +792,51 @@ local panelo = {
         + g.panel.timeSeries.fieldConfig.defaults.custom.thresholdsStyle.withMode(thresholdMode)
         + g.panel.timeSeries.standardOptions.thresholds.withSteps(thresholdSteps),
 
+    trend(
+        title='',
+        id=null,
+        description='',
+        targets=[],
+        transparent=false,
+        unit=null,
+        min=null,
+        max=null,
+        axisLabel='',
+        decimals=null,
+        legendMode='table',
+        legendPlacement='bottom',
+        tooltipMode='multi',
+        stackingMode=null,
+        fillOpacity=6,
+        gradientMode='opacity',
+        axisWidth=null,
+        drawStyle='lines',
+        thresholdMode=null,
+        thresholdSteps=[],
+        transformations={},
+        overrides=[],
+    ):: g.panel.trend.new(title)
+        + transformations
+        + g.panel.trend.panelOptions.withDescription(description)
+        + g.panel.trend.queryOptions.withTargets(targets)
+        + (if transparent then g.panel.trend.panelOptions.withTransparent() else {})
+        + g.panel.trend.standardOptions.withUnit(unit)
+        + g.panel.trend.standardOptions.withMin(min)
+        + g.panel.trend.standardOptions.withMax(max)
+        + g.panel.trend.standardOptions.withDecimals(decimals)
+        + g.panel.trend.options.legend.withDisplayMode(legendMode)
+        + g.panel.trend.options.legend.withPlacement(legendPlacement)
+        + g.panel.trend.options.tooltip.withMode(tooltipMode)
+        + g.panel.trend.fieldConfig.defaults.custom.stacking.withMode(stackingMode)
+        + g.panel.trend.fieldConfig.defaults.custom.withFillOpacity(fillOpacity)
+        + g.panel.trend.fieldConfig.defaults.custom.withGradientMode(gradientMode)
+        + g.panel.trend.fieldConfig.defaults.custom.withAxisWidth(axisWidth)
+        + g.panel.trend.fieldConfig.defaults.custom.withDrawStyle(drawStyle)
+        + g.panel.trend.fieldConfig.defaults.custom.withAxisLabel(axisLabel)
+        + g.panel.trend.fieldConfig.defaults.custom.thresholdsStyle.withMode(thresholdMode)
+        + g.panel.trend.standardOptions.thresholds.withSteps(thresholdSteps)
+        + g.panel.trend.standardOptions.withOverrides(overrides),
+
     barChart(
         title='',
         description='',
@@ -752,6 +897,25 @@ local panelo = {
 //
 // Begin panels definitions
 //
+local trendpanels ={
+  kserve_llm_load_test_throughput_rhoai:: panelo.trend(
+    title='Kserve LLM load test throughput',
+    description='Throughput; Higher is better',
+    targets=[
+      opensearch_queries.get_kserve_llm_load_test_throughput(),
+    ],
+    min=0,
+    axisLabel='Throughput',
+    unit='',
+    decimals=0,
+    legendPlacement='bottom',
+    fillOpacity=60,
+    gradientMode=null,
+    transformations = myTransformations.groupByTrendData(),
+    overrides = myOverrides.VirtualUserTrendAxis().overrides
+  ),
+};
+
 local statetime ={
   notebookPerfMin:: panelo.stateTimeline(
     title='Minimum execution time',
@@ -845,7 +1009,7 @@ local bchart ={
   ),
   kserve_llm_load_test_throughput_rhoai:: panelo.barChart(
     title='Kserve LLM load test throughput',
-    description='Output Tokens per Second; Higher is better',
+    description='Throughput; Higher is better',
     targets=[
       opensearch_queries.get_kserve_llm_load_test_throughput(),
     ],
@@ -1027,6 +1191,7 @@ local bchart ={
 local myPanels = {
   stateTimeline: statetime,
   timeSeries: timese,
+  trend: trendpanels,
   barChart: bchart,
 };
 //
@@ -1079,7 +1244,8 @@ g.dashboard.new('Watsonx Kserve LLM load tests')
   myPanels.barChart.kserve_llm_load_test_tpot_rhoai + x(0) + y(84)  + w(12) + h(14),
   myPanels.barChart.kserve_llm_load_test_ttft_rhoai + x(12) + y(84)  + w(12) + h(14),
   myPanels.barChart.kserve_llm_load_test_model_load_duration_rhoai + x(0) + y(98)  + w(12) + h(14),
-  myPanels.barChart.kserve_llm_load_test_throughput_rhoai + x(12) + y(98)  + w(12) + h(14),
+  //myPanels.barChart.kserve_llm_load_test_throughput_rhoai + x(12) + y(98)  + w(12) + h(14),
+  myPanels.trend.kserve_llm_load_test_throughput_rhoai + x(12) + y(98)  + w(12) + h(14),
   myPanels.barChart.kserve_llm_load_test_failures_rhoai + x(0) + y(112)  + w(24) + h(14),
   g.panel.row.new("LLM Load tests over time") + x(0) + y(126),
   myPanels.timeSeries.kserve_llm_load_test_throughput + x(0) + y(127)  + w(24) + h(14),
