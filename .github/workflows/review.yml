@@ -113,7 +113,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run PullHero
-        uses: ccamacho/pullhero@v1.0.2
+        uses: ccamacho/pullhero@v1
         with:
           api-key: "${{ secrets.OPENAI_API_KEY }}"
           github-token: "${{ secrets.GITHUB_TOKEN }}"
