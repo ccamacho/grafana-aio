@@ -22,7 +22,7 @@ from influxdb_client import InfluxDBClient
 INFLUXDB_HOST = 'localhost'
 INFLUXDB_PORT = 8086
 INFLUXDB_BUCKET = 'psap'
-INFLUXDB_BUCKET_RETENTION = '500w'
+INFLUXDB_BUCKET_RETENTION = '500w;
 INFLUXDB_USER = 'psap'
 INFLUXDB_PASSWORD = 'this_is_a_very_long_password'
 INFLUXDB_TOKEN = 'Z0naPts1oKBrUe7N4uP7M-Hb8Qt7r9lQZJwYxEM8k8gb_VqOjODlHLa8pyjwrvkIaB4uMOkvmWlmWXS2CmL7mg=='
