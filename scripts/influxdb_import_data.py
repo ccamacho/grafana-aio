@@ -43,25 +43,7 @@ def import_latency(client):
             point = Point(measurement) \
                 .time(timestamp) \
                 .field("degrees", int(degrees)) \
-                .field("llama-65b-2023:01", int(row[1])) \
-                .field("llana-30b-2023:6", int(row[2])) \
-                .field("vicuna-38b-2023:6", int(row[3])) \
-                .field("llama-500b-2023:12", int(row[4])) \
-                .field("vicuna-3b-2023:8", int(row[5])) \
-                .field("vicuna-80b-2024:1", int(row[6]))
-            write_api.write(bucket=INFLUXDB_BUCKET, org=INFLUXDB_ORG, record=point)
-
-    with open(data_path, 'r') as file:
-        measurement = 'latency_labelled'
-        csv_reader = csv.reader(file)
-        header = next(csv_reader)
-        print(header)
-        for row in csv_reader:
-            timestamp_str = row[0]
-            timestamp = datetime.strptime(timestamp_str, "%Y-%m-%d %H:%M:%S")
-            points = []
-            points.append(Point(measurement)
-                          .time(timestamp)
+                .fiel
                           .field("latency_ms", int(row[1]))
                           .tag("llama-65b", "2023:01"))
             points.append(Point(measurement)
