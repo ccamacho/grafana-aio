@@ -117,5 +117,5 @@ jobs:
         with:
           github-token: "${{ secrets.GITHUB_TOKEN }}"
           api-key: "${{ secrets.MISTRAL_API_KEY }}"
-          api-host: "api.mistral.com"
-          api-model: "mistral-large"
+          api-host: "api.mistral.ai"
+          api-model: "mistral-large-latest"

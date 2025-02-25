@@ -116,6 +116,6 @@ jobs:
         uses: ccamacho/pullhero@v1
         with:
           github-token: "${{ secrets.GITHUB_TOKEN }}"
-          api-key: "${{ secrets.OPENAI_API_KEY }}"
+          api-key: "${{ secrets.DEEPSEEK_API_KEY }}"
           api-host: "api.deepseek.com"
           api-model: "deepseek-chat"
